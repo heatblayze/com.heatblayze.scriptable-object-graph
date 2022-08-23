@@ -1,0 +1,11 @@
+{
+  "name": "com.heatblayze.quest-graph",
+  "version": "1.0.0",
+  "displayName": "Quest Graph",
+  "description": "Simple quest tools with a graph-based editor",
+  "unity": "2021.1",
+  "author": {
+    "name": "heatblayze",
+    "url": "https://github.com/heatblayze"
+  }
+}
