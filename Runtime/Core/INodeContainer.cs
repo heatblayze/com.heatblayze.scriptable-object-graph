@@ -11,9 +11,10 @@ namespace QuestGraph
     {
         public interface NodeContainerBase
         {
-            public Type GetNodeType();
-            public IEnumerable<NodeBase> GetNodesInternal();
-            public NodeBase CreateNode(Type type);
+            string EditorWindowPrefix { get; }
+            Type GetNodeType();
+            IEnumerable<NodeBase> GetNodesInternal();
+            NodeBase CreateNode(Type type);
         }
     }
 

@@ -9,19 +9,17 @@ using UnityEngine.UIElements;
 
 namespace QuestGraph.Editor
 {
-    public class QuestGraphWindow : EditorWindow
+    public class CustomGraphWindow : EditorWindow
     {
         public const string PackageRoot = "Packages/com.heatblayze.quest-graph/Editor/";
 
-        QuestGraphView _graphView;
+        CustomGraphView _graphView;
 
         #region Static
-
-        [MenuItem("RPG Tools/Quest Graph")]
-        public static QuestGraphWindow OpenQuestGraphEditor()
+        
+        static CustomGraphWindow OpenGraphWindow()
         {
-            var window = GetWindow<QuestGraphWindow>();
-            window.titleContent = new GUIContent("Quest Graph");
+            var window = GetWindow<CustomGraphWindow>();            
             return window;
         }
 
@@ -33,8 +31,9 @@ namespace QuestGraph.Editor
             // Only allow node containers to be selected
             if (typeof(NodeContainerBase).IsAssignableFrom(asset.GetType()))
             {
-                var window = OpenQuestGraphEditor();
+                var window = OpenGraphWindow();
                 window._graphView.SetAsset(asset);
+                window.titleContent = new GUIContent($"{((NodeContainerBase)asset).EditorWindowPrefix} Graph");
                 return true;
             }
             return false;
@@ -44,7 +43,7 @@ namespace QuestGraph.Editor
 
         private void OnEnable()
         {
-            _graphView = new QuestGraphView();
+            _graphView = new CustomGraphView();
 
             _graphView.StretchToParentSize();
             rootVisualElement.Add(_graphView);

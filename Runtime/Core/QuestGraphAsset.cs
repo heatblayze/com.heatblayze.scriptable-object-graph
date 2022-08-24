@@ -21,6 +21,9 @@ namespace QuestGraph.Core
         QuestAttributeList _attributes;
 
         public Questline EntryNode => _entryNode;
+
+        public string EditorWindowPrefix => "Questline";
+
         [SerializeField]
         Questline _entryNode;
 
