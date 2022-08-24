@@ -1,8 +1,8 @@
-using QuestGraph.Internal;
+using ScriptableObjectGraph.Internal;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace QuestGraph.Core
+namespace ScriptableObjectGraph.Core
 {
     [System.Serializable]
     public class NodeConnection
@@ -21,9 +21,9 @@ namespace QuestGraph.Core
     {
         public Vector2 Position;
 
-        public NodeContainerBase Parent => _parent;
+        public INodeContainerBase Parent => _parent;
         [SerializeField]
-        NodeContainerBase _parent;
+        INodeContainerBase _parent;
 
         public QuestAttributeList Attributes => _attributes;
         [SerializeField]
@@ -33,7 +33,7 @@ namespace QuestGraph.Core
         [SerializeField]
         protected NodePort[] _connections;
 
-        public void Initialize(NodeContainerBase parent)
+        public void Initialize(INodeContainerBase parent)
         {
             _parent = parent;
             OnCreated();

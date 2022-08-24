@@ -1,4 +1,4 @@
-using QuestGraph.Editor.Internal;
+using ScriptableObjectGraph.Editor.Internal;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.Reflection;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
-namespace QuestGraph.Editor
+namespace ScriptableObjectGraph.Editor
 {
     namespace Internal
     {

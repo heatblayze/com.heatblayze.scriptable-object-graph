@@ -1,9 +1,9 @@
-using QuestGraph.Core;
+using ScriptableObjectGraph.Core;
 using System.Collections.Generic;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
-namespace QuestGraph.Editor
+namespace ScriptableObjectGraph.Editor
 {
     public abstract class NodeView : Node
     {

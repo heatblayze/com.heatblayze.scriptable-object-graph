@@ -1,15 +1,15 @@
-using QuestGraph.Core;
-using QuestGraph.Internal;
+using ScriptableObjectGraph.Core;
+using ScriptableObjectGraph.Internal;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace QuestGraph
+namespace ScriptableObjectGraph
 {
     namespace Internal
     {
-        public interface NodeContainerBase
+        public interface INodeContainerBase
         {
             string EditorWindowPrefix { get; }
             Type GetNodeType();
@@ -18,14 +18,14 @@ namespace QuestGraph
         }
     }
 
-    public interface INodeContainer<T> : NodeContainerBase where T : NodeBase
+    public interface INodeContainer<T> : INodeContainerBase where T : NodeBase
     {
-        Type NodeContainerBase.GetNodeType()
+        Type INodeContainerBase.GetNodeType()
         {
             return typeof(T);
         }
 
-        IEnumerable<NodeBase> NodeContainerBase.GetNodesInternal()
+        IEnumerable<NodeBase> INodeContainerBase.GetNodesInternal()
         {
             return GetNodes();
         }

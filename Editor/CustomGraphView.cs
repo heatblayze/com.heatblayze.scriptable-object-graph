@@ -1,6 +1,6 @@
-using QuestGraph.Core;
-using QuestGraph.Editor.Internal;
-using QuestGraph.Internal;
+using ScriptableObjectGraph.Core;
+using ScriptableObjectGraph.Editor.Internal;
+using ScriptableObjectGraph.Internal;
 using System;
 using System.Collections.Generic;
 using UnityEditor;
@@ -8,11 +8,11 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace QuestGraph.Editor
+namespace ScriptableObjectGraph.Editor
 {
     public class CustomGraphView : GraphView
     {
-        public NodeContainerBase Asset { get; private set; }
+        public INodeContainerBase Asset { get; private set; }
 
         public List<NodeView> NodeViews => _nodes;
 
@@ -78,9 +78,9 @@ namespace QuestGraph.Editor
 
         #region Public Methods
 
-        public void SetAsset(UnityEngine.Object asset)
+        public void SetAsset(INodeContainerBase asset)
         {
-            Asset = asset as NodeContainerBase;
+            Asset = asset;
             PopulateView();
         }
 

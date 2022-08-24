@@ -1,6 +1,6 @@
 {
-    "name": "com.heatblayze.questgraph.runtime",
-    "rootNamespace": "QuestGraph",
+    "name": "com.heatblayze.scrtipable-object-graph.runtime",
+    "rootNamespace": "ScriptableObjectGraph",
     "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],

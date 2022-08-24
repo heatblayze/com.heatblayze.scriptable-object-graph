@@ -7,7 +7,7 @@ using UnityEditor;
 #endif
 
 
-namespace QuestGraph.Core
+namespace ScriptableObjectGraph.Core
 {
     [CreateAssetMenu(menuName = "RPG Tools/Quest Graph", order = 120)]
     public class QuestGraphAsset : GuidScriptable, INodeContainer<Questline>
