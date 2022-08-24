@@ -19,6 +19,7 @@ namespace QuestGraph.Editor
             Insert(0, new GridBackground());
 
             this.AddManipulator(new ContentDragger());
+            // TODO: implement my own SelectionDragger to allow undo/redo of content position
             this.AddManipulator(new SelectionDragger());
             this.AddManipulator(new RectangleSelector());
             this.AddManipulator(new ContentZoomer());
