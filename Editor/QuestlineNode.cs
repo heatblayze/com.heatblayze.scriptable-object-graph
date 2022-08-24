@@ -10,7 +10,7 @@ namespace QuestGraph.Editor
     {
         Questline _questline;
 
-        public QuestlineNode(Questline questline)
+        public QuestlineNode(Questline questline) : base(questline)
         {
             _questline = questline;
             title = _questline.name;

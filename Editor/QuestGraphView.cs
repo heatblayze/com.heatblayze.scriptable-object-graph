@@ -1,9 +1,11 @@
+using QuestGraph.Core;
 using QuestGraph.Editor.Internal;
 using QuestGraph.Internal;
 using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace QuestGraph.Editor
@@ -57,7 +59,7 @@ namespace QuestGraph.Editor
                         createdAnyAction = true;
                         evt.menu.AppendAction($"{factory.ContextMenuName}", (a) =>
                         {
-                            CreateNode(factory, type);
+                            CreateNode(factory, type, a.eventInfo.localMousePosition);
                         });
                     }
                 }
@@ -72,7 +74,7 @@ namespace QuestGraph.Editor
                     createdAnyAction = true;
                     evt.menu.AppendAction($"{factory.ContextMenuName}", (a) =>
                     {
-                        CreateNode(factory, type);
+                        CreateNode(factory, type, a.eventInfo.localMousePosition);
                     });
                 }
             }
@@ -83,15 +85,17 @@ namespace QuestGraph.Editor
             }
         }
 
-        void CreateNode(NodeViewFactoryBase factory, System.Type type)
+        void CreateNode(NodeViewFactoryBase factory, System.Type type, Vector2 position)
         {
             var node = Asset.CreateNode(type);
+            node.Position = position;
             CreateNodeView(factory, node);
         }
 
-        void CreateNodeView(NodeViewFactoryBase factory, GuidScriptable node)
+        void CreateNodeView(NodeViewFactoryBase factory, NodeBase node)
         {
             var nodeView = factory.CreateNodeView(node);
+            nodeView.SetPosition(new Rect(node.Position, Vector2.zero));
             AddElement(nodeView);
         }
     }

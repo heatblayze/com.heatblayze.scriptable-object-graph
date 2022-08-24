@@ -6,6 +6,8 @@ namespace QuestGraph.Core
 {
     public class NodeBase : GuidScriptable
     {
+        public Vector2 Position;
+
         public QuestAttributeList Attributes => _attributes;
         [SerializeField]
         QuestAttributeList _attributes;
