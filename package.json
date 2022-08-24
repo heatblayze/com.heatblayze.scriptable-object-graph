@@ -1,8 +1,8 @@
 {
-  "name": "com.heatblayze.quest-graph",
+  "name": "com.heatblayze.scriptable-object-graph",
   "version": "1.0.0",
-  "displayName": "Quest Graph",
-  "description": "Simple quest tools with a graph-based editor",
+  "displayName": "Scriptable Object Graph",
+  "description": "A library for creating GraphViews for your Scriptable Objects",
   "unity": "2021.1",
   "author": {
     "name": "heatblayze",
