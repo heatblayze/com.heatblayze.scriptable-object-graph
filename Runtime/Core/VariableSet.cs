@@ -15,6 +15,7 @@ namespace QuestGraph.Core
         }
 
         public Dictionary<string, List<Variable>> Variables { get; private set; } = new Dictionary<string, List<Variable>>();
+        [SerializeField]
         private VariableDictionary[] _variables;
 
         public void OnBeforeSerialize()
@@ -44,7 +45,7 @@ namespace QuestGraph.Core
         }
     }
 
-    public class Variable : ScriptableObject
+    public class Variable : GuidScriptable
     {
         public string Name;
     }

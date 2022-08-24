@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace QuestGraph.Core
 {
-    public class QuestNode : Node
+    public abstract class QuestNodeBase : NodeBase
     {
 
     }

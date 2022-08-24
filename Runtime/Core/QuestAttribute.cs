@@ -11,35 +11,35 @@ namespace QuestGraph.Core
     [Serializable]
     public class QuestAttributeList
     {
-        public List<QuestAttribute> Components => _components;
+        public List<QuestAttribute> Attributes => _attributes;
 
         [SerializeField, SerializeReference]
-        List<QuestAttribute> _components = new List<QuestAttribute>();
+        List<QuestAttribute> _attributes = new List<QuestAttribute>();
 
         public T GetAttribute<T>() where T : QuestAttribute
         {
-            foreach (var component in Components)
+            foreach (var attribute in Attributes)
             {
-                if (component is T)
-                    return (T)component;
+                if (attribute is T)
+                    return (T)attribute;
             }
             return null;
         }
 
-        public void GetAttribute<T>(List<T> components) where T : QuestAttribute
+        public void GetAttribute<T>(List<T> attributes) where T : QuestAttribute
         {
-            foreach (var component in Components)
+            foreach (var attribute in Attributes)
             {
-                if (component is T)
-                    components.Add((T)component);
+                if (attribute is T)
+                    attributes.Add((T)attribute);
             }
         }
 
-        public List<T> GetComponents<T>() where T : QuestAttribute
+        public List<T> GetAttributes<T>() where T : QuestAttribute
         {
-            List<T> components = new List<T>();
-            GetAttribute<T>(components);
-            return components;
+            List<T> attributes = new List<T>();
+            GetAttribute<T>(attributes);
+            return attributes;
         }
     }
 }

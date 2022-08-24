@@ -1,17 +1,28 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace QuestGraph.Core
 {
-    public class Questline : ScriptableObject
+    public class Questline : NodeBase, INodeContainer<QuestNodeBase>
     {
-        public List<Node> Nodes => _nodes;
+        public List<QuestNodeBase> Nodes => _nodes;
         [SerializeField]
-        List<Node> _nodes = new List<Node>();
+        List<QuestNodeBase> _nodes;
 
-        public QuestAttributeList Attributes => _attributes;
+        public NodeBase EntryNode => _entryNode;
         [SerializeField]
-        QuestAttributeList _attributes;
+        NodeBase _entryNode;
+
+        public IEnumerable<QuestNodeBase> GetNodes()
+        {
+            return _nodes;
+        }
+
+        public NodeBase CreateNode(Type type)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

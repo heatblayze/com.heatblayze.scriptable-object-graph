@@ -4,10 +4,14 @@ using UnityEngine;
 
 namespace QuestGraph.Core
 {
-    public class Node : ScriptableObject
+    public class NodeBase : GuidScriptable
     {
         public QuestAttributeList Attributes => _attributes;
         [SerializeField]
         QuestAttributeList _attributes;
+
+        public List<NodeBase> Connections => _connections;
+        [SerializeField]
+        List<NodeBase> _connections;
     }
 }
