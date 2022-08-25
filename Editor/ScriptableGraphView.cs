@@ -14,12 +14,16 @@ namespace ScriptableObjectGraph.Editor
     {
         public new class UxmlFactory : UxmlFactory<ScriptableGraphView, GraphView.UxmlTraits> { }
 
-        public INodeContainerBase Asset { get; private set; }
+        public INodeContainerBase Asset { get => _asset; set => _asset = value; }
+        [SerializeField]
+        INodeContainerBase _asset;
 
         public List<NodeView> NodeViews => _nodes;
 
         public event Action<NodeView> OnNodeSelected;
         public event Action<NodeView> OnNodeUnselected;
+
+        NodeView _selectedNode;
 
         Dictionary<NodeBase, NodeView> _nodeDictionary = new Dictionary<NodeBase, NodeView>();
         Dictionary<Port, NodeView> _portDictionary = new Dictionary<Port, NodeView>();
@@ -39,17 +43,35 @@ namespace ScriptableObjectGraph.Editor
 
             styleSheets.Add((StyleSheet)EditorGUIUtility.Load(ScriptableGraphWindow.PackageRoot + "GraphStyles.uss"));
 
-            this.graphViewChanged += OnChanges;
+            graphViewChanged += OnChanges;
+            Undo.undoRedoPerformed += OnUndo;
+        }
+
+        void OnUndo()
+        {
+            NodeBase selectedNode = _selectedNode?.Node;
+
+            if (Asset != null)
+                PopulateView();
+
+            if(selectedNode != null)
+            {
+                this.AddToSelection(_nodeDictionary[selectedNode]);
+            }
         }
 
         #region Node Callbacks
         void NodeSelected(NodeView node)
         {
+            _selectedNode = node;
             OnNodeSelected?.Invoke(node);
         }
 
         void NodeUnselected(NodeView node)
         {
+            if (_selectedNode == node)
+                _selectedNode = null;
+
             OnNodeUnselected?.Invoke(node);
         }
         #endregion
@@ -85,6 +107,10 @@ namespace ScriptableObjectGraph.Editor
 
                         parentNodeView.RemoveEdge(edge, childNodeView);
                     }
+                    else if(element is NodeView nodeView)
+                    {
+                        // TODO: hmmm..... might need to rework this system a little to allow undo/redo deletion stuff
+                    }
                 });
             }
 
@@ -104,7 +130,6 @@ namespace ScriptableObjectGraph.Editor
         public void PopulateView()
         {
             _clear = true;
-
 
             DeleteElements(graphElements);
             _nodeDictionary.Clear();

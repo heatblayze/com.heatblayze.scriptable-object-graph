@@ -1,6 +1,7 @@
 using ScriptableObjectGraph.Core;
 using System;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
@@ -121,6 +122,8 @@ namespace ScriptableObjectGraph.Editor
             {
                 if (OutputPorts[i] == edge.output)
                 {
+                    Undo.RegisterCompleteObjectUndo(Node, "Connect port");
+
                     if (OutputPorts[i].capacity == Port.Capacity.Single)
                     {
                         Node.Ports[i].Connections.Clear();
@@ -153,6 +156,7 @@ namespace ScriptableObjectGraph.Editor
                     {
                         if(Node.Ports[i].Connections[x].PortIndex == inputIndex)
                         {
+                            Undo.RegisterCompleteObjectUndo(Node, "Remove port");
                             Node.Ports[i].Connections.RemoveAt(x);
                             break;
                         }
