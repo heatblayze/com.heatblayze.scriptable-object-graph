@@ -47,12 +47,20 @@ namespace ScriptableObjectGraph.Editor
             float y = position.y;
             for (int i = 0; i < _components.arraySize; i++)
             {
+                string labelName = null;
                 var component = _components.GetArrayElementAtIndex(i);
-                position.height = EditorGUI.GetPropertyHeight(component, true);
+                if (component.managedReferenceValue != null)
+                {
+                    var type = component.managedReferenceValue.GetType();
+                    labelName = ObjectNames.NicifyVariableName(type.Name);
+                }
+                else
+                {
+                    labelName = "Nullreference";
+                }
 
-                var type = component.managedReferenceValue.GetType();
-                var typeName = ObjectNames.NicifyVariableName(type.Name);
-                EditorGUI.PropertyField(position, component, new GUIContent(typeName), true);
+                position.height = EditorGUI.GetPropertyHeight(component, true);
+                EditorGUI.PropertyField(position, component, new GUIContent(labelName), true);
 
                 position.y += position.height;
 
