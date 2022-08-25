@@ -8,7 +8,7 @@ namespace ScriptableObjectGraph.Editor
     public abstract class NodeView : Node
     {
         public NodeBase Node;
-        public CustomGraphView Parent;
+        public ScriptableGraphView Parent;
 
         public Port[] InputPorts;
         public Port[] OutputPorts;

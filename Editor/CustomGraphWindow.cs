@@ -10,7 +10,7 @@ namespace ScriptableObjectGraph.Editor
     {
         public const string PackageRoot = "Packages/com.heatblayze.scriptable-object-graph/Editor/";
 
-        CustomGraphView _graphView;
+        ScriptableGraphView _graphView;
         INodeContainerBase _nodeContainer;
 
         #region Static
@@ -42,20 +42,17 @@ namespace ScriptableObjectGraph.Editor
 
         #endregion
 
-        private void OnEnable()
+        public void CreateGUI()
         {
-            _graphView = new CustomGraphView();
+            var document = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(PackageRoot + "GraphWindow.uxml");
+            document.CloneTree(rootVisualElement);
+
+            var styles = AssetDatabase.LoadAssetAtPath<StyleSheet>(PackageRoot + "GraphWindow.uss");
+            rootVisualElement.styleSheets.Add(styles);
+
+            _graphView = rootVisualElement.Q<ScriptableGraphView>();
             if (_nodeContainer != null)
                 _graphView.SetAsset(_nodeContainer);
-
-            _graphView.StretchToParentSize();
-            rootVisualElement.Add(_graphView);
-        }
-
-        private void OnDisable()
-        {
-            if (_graphView != null)
-                rootVisualElement.Remove(_graphView);
         }
     }
 }

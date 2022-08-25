@@ -9,9 +9,11 @@ using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace ScriptableObjectGraph.Editor
-{
-    public class CustomGraphView : GraphView
+{    
+    public class ScriptableGraphView : GraphView
     {
+        public new class UxmlFactory : UxmlFactory<ScriptableGraphView, GraphView.UxmlTraits> { }
+
         public INodeContainerBase Asset { get; private set; }
 
         public List<NodeView> NodeViews => _nodes;
@@ -22,7 +24,7 @@ namespace ScriptableObjectGraph.Editor
 
         bool _clear;
 
-        public CustomGraphView()
+        public ScriptableGraphView()
         {
             Insert(0, new GridBackground());
 
