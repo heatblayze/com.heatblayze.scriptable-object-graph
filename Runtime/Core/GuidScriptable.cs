@@ -7,9 +7,9 @@ namespace ScriptableObjectGraph
 {
     public class GuidScriptable : ScriptableObject
     {
-        public string GuidString => guid;
-        public Guid Guid => Guid.Parse(guid);
+        public string GuidString => _guid;
+        public Guid Guid => Guid.Parse(_guid);
         [SerializeField]
-        internal string guid = Guid.NewGuid().ToString();
+        internal string _guid = Guid.NewGuid().ToString();
     }
 }

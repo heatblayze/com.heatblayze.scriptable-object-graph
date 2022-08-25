@@ -25,9 +25,9 @@ namespace ScriptableObjectGraph.Core
         [SerializeField]
         INodeContainerBase _parent;
 
-        public NodeComponentList Attributes => _attributes;
+        public NodeComponentList Components => _components;
         [SerializeField]
-        NodeComponentList _attributes;
+        NodeComponentList _components;
 
         public NodePort[] Ports => _connections;
         [SerializeField]

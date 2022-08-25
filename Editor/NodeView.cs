@@ -1,4 +1,5 @@
 using ScriptableObjectGraph.Core;
+using System;
 using System.Collections.Generic;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
@@ -9,6 +10,9 @@ namespace ScriptableObjectGraph.Editor
     {
         public NodeBase Node;
         public ScriptableGraphView Parent;
+
+        public event Action<NodeView> OnNodeSelected;
+        public event Action<NodeView> OnNodeUnselected;
 
         public Port[] InputPorts;
         public Port[] OutputPorts;
@@ -26,6 +30,19 @@ namespace ScriptableObjectGraph.Editor
             Node.Position = newPos.position;
         }
 
+        public override void OnSelected()
+        {
+            base.OnSelected();
+            OnNodeSelected?.Invoke(this);
+        }
+
+        public override void OnUnselected()
+        {
+            base.OnUnselected();
+            OnNodeUnselected?.Invoke(this);
+        }
+
+        #region Ports
         public virtual Port[] CreateInputPorts()
         {
             InputPorts = new Port[InputPortCount];
@@ -144,5 +161,6 @@ namespace ScriptableObjectGraph.Editor
                 }
             }
         }
+        #endregion
     }
 }

@@ -1,4 +1,16 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Packages/com.heatblayze.scriptable-object-graph/Editor/GraphWindow.uss?fileID=7433441132597879392&amp;guid=08b19262c2e09444693af7a671b0ef57&amp;type=3#GraphWindow" />
-    <ScriptableObjectGraph.Editor.ScriptableGraphView focusable="true" style="flex-grow: 1;" />
+    <ScriptableObjectGraph.Editor.SplitView fixed-pane-initial-dimension="250" fixed-pane-index="1">
+        <ui:VisualElement name="left-panel">
+            <ScriptableObjectGraph.Editor.ScriptableGraphView focusable="true" style="flex-grow: 1;" />
+        </ui:VisualElement>
+        <ui:VisualElement name="right-panel" style="padding-top: 2px;">
+            <ui:VisualElement style="padding-left: 3px; background-color: rgb(37, 37, 37);">
+                <ui:Label text="Inspector" display-tooltip-when-elided="true" style="font-size: 13px;" />
+            </ui:VisualElement>
+            <ui:ScrollView style="flex-grow: 1;">
+                <ScriptableObjectGraph.Editor.InspectorView style="padding-left: 5px; padding-right: 5px; padding-bottom: 5px; padding-top: 5px;" />
+            </ui:ScrollView>
+        </ui:VisualElement>
+    </ScriptableObjectGraph.Editor.SplitView>
 </ui:UXML>

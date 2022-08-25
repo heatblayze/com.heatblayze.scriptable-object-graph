@@ -18,6 +18,9 @@ namespace ScriptableObjectGraph.Editor
 
         public List<NodeView> NodeViews => _nodes;
 
+        public event Action<NodeView> OnNodeSelected;
+        public event Action<NodeView> OnNodeUnselected;
+
         Dictionary<NodeBase, NodeView> _nodeDictionary = new Dictionary<NodeBase, NodeView>();
         Dictionary<Port, NodeView> _portDictionary = new Dictionary<Port, NodeView>();
         List<NodeView> _nodes = new List<NodeView>();
@@ -34,10 +37,22 @@ namespace ScriptableObjectGraph.Editor
             this.AddManipulator(new RectangleSelector());
             this.AddManipulator(new ContentZoomer());
 
-            styleSheets.Add((StyleSheet)EditorGUIUtility.Load(CustomGraphWindow.PackageRoot + "GraphStyles.uss"));
+            styleSheets.Add((StyleSheet)EditorGUIUtility.Load(ScriptableGraphWindow.PackageRoot + "GraphStyles.uss"));
 
             this.graphViewChanged += OnChanges;
         }
+
+        #region Node Callbacks
+        void NodeSelected(NodeView node)
+        {
+            OnNodeSelected?.Invoke(node);
+        }
+
+        void NodeUnselected(NodeView node)
+        {
+            OnNodeUnselected?.Invoke(node);
+        }
+        #endregion
 
         #region Graph Callbacks
         GraphViewChange OnChanges(GraphViewChange graphViewChange)
@@ -89,6 +104,7 @@ namespace ScriptableObjectGraph.Editor
         public void PopulateView()
         {
             _clear = true;
+
 
             DeleteElements(graphElements);
             _nodeDictionary.Clear();
@@ -199,6 +215,9 @@ namespace ScriptableObjectGraph.Editor
 
             nodeView.RefreshPorts();
             nodeView.RefreshExpandedState();
+
+            nodeView.OnNodeSelected += NodeSelected;
+            nodeView.OnNodeUnselected += NodeUnselected;
         }
 
         #endregion
