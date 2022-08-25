@@ -6,19 +6,19 @@ using UnityEngine;
 namespace ScriptableObjectGraph.Core
 {
     [Serializable]
-    public abstract class QuestAttribute { }
+    public abstract class NodeComponent { }
 
     [Serializable]
-    public class QuestAttributeList
+    public class NodeComponentList
     {
-        public List<QuestAttribute> Attributes => _attributes;
+        public List<NodeComponent> Components => _components;
 
         [SerializeField, SerializeReference]
-        List<QuestAttribute> _attributes = new List<QuestAttribute>();
+        List<NodeComponent> _components = new List<NodeComponent>();
 
-        public T GetAttribute<T>() where T : QuestAttribute
+        public T GetComponent<T>() where T : NodeComponent
         {
-            foreach (var attribute in Attributes)
+            foreach (var attribute in Components)
             {
                 if (attribute is T)
                     return (T)attribute;
@@ -26,19 +26,19 @@ namespace ScriptableObjectGraph.Core
             return null;
         }
 
-        public void GetAttribute<T>(List<T> attributes) where T : QuestAttribute
+        public void GetComponents<T>(List<T> attributes) where T : NodeComponent
         {
-            foreach (var attribute in Attributes)
+            foreach (var attribute in Components)
             {
                 if (attribute is T)
                     attributes.Add((T)attribute);
             }
         }
 
-        public List<T> GetAttributes<T>() where T : QuestAttribute
+        public List<T> GetComponents<T>() where T : NodeComponent
         {
             List<T> attributes = new List<T>();
-            GetAttribute<T>(attributes);
+            GetComponents<T>(attributes);
             return attributes;
         }
     }

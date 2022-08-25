@@ -10,6 +10,6 @@ namespace ScriptableObjectGraph
         public string GuidString => guid;
         public Guid Guid => Guid.Parse(guid);
         [SerializeField]
-        internal string guid;
+        internal string guid = Guid.NewGuid().ToString();
     }
 }
