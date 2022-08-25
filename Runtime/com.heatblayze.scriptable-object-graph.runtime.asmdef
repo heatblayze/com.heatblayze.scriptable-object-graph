@@ -1,12 +1,8 @@
 {
-    "name": "com.heatblayze.scrtipable-object-graph.editor",
-    "rootNamespace": "ScriptableObjectGraph.Editor",
-    "references": [
-        "GUID:a848cce9c730dcb4093d389eb5358861"
-    ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "name": "com.heatblayze.scriptable-object-graph.runtime",
+    "rootNamespace": "ScriptableObjectGraph",
+    "references": [],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
