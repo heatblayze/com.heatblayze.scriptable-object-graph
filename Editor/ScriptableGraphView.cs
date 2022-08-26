@@ -292,7 +292,7 @@ namespace ScriptableObjectGraph.Editor
                     if (factory != null)
                     {
                         createdAnyAction = true;
-                        evt.menu.AppendAction($"{factory.ContextMenuName}", (a) =>
+                        evt.menu.AppendAction($"Add {factory.ContextMenuName}", (a) =>
                         {
                             CreateNode(factory, type, a.eventInfo.localMousePosition);
                         });
@@ -304,7 +304,7 @@ namespace ScriptableObjectGraph.Editor
             {
                 var type = Asset.GetNodeType();
                 var factory = NodeViewFactoryCache.GetFactory(type);
-                if (factory != null)
+                if (factory != null && !type.IsAbstract)
                 {
                     createdAnyAction = true;
                     evt.menu.AppendAction($"Add {factory.ContextMenuName}", (a) =>
