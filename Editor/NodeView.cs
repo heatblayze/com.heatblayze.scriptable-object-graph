@@ -22,8 +22,6 @@ namespace ScriptableObjectGraph.Editor
 
         public virtual int InputPortCount => 1;
 
-        DateTime _clickTime;
-
         public NodeView(NodeBase node)
         {
             Node = node;
@@ -49,7 +47,6 @@ namespace ScriptableObjectGraph.Editor
             {
                 OnNodeDoubleClick?.Invoke(this);
             }
-            _clickTime = DateTime.Now;
         }
 
         #region Ports
