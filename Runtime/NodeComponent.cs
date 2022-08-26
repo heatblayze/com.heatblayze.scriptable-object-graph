@@ -6,7 +6,13 @@ using UnityEngine;
 namespace ScriptableObjectGraph
 {
     [Serializable]
-    public abstract class NodeComponent { }
+    public abstract class NodeComponent : ICloneable
+    {
+        public virtual object Clone()
+        {
+            return this.MemberwiseClone();
+        }
+    }
 
     [Serializable]
     public class NodeComponentList
@@ -40,6 +46,16 @@ namespace ScriptableObjectGraph
             List<T> attributes = new List<T>();
             GetComponents<T>(attributes);
             return attributes;
+        }
+
+        public NodeComponentList Clone()
+        {
+            var list = new NodeComponentList();
+            foreach(var component in Components)
+            {
+                list.Components.Add((NodeComponent)component.Clone());
+            }
+            return list;
         }
     }
 }

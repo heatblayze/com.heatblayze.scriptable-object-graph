@@ -18,6 +18,9 @@ namespace ScriptableObjectGraph.Editor
 
         ScriptableGraphView _graphView;
         InspectorView _inspector;
+        VisualElement _inspectorPanel;
+        SplitView _splitView;
+
         bool _guiCreated;
 
         #region Static
@@ -102,6 +105,17 @@ namespace ScriptableObjectGraph.Editor
             if (_nodeContainer != null)
                 _graphView.SetAsset(_nodeContainer);
 
+            _splitView = rootVisualElement.Q<SplitView>();
+            _inspectorPanel = _splitView.Q("right-panel");
+
+            var size = EditorPrefs.GetFloat("scriptable_graph_panel_size", -1);
+            if(size > -1)
+            {
+                _splitView.fixedPaneInitialDimension = size;
+            }
+
+            _inspectorPanel.RegisterCallback<GeometryChangedEvent>(SplitViewChange);
+
             _inspector = rootVisualElement.Q<InspectorView>();
             _inspector.Clean();
 
@@ -110,9 +124,15 @@ namespace ScriptableObjectGraph.Editor
 
             _graphView.OnNodeSelected += NodeSelected;
             _graphView.OnNodeUnselected += NodeUnselected;
+
         }
 
-        #region Graph Callbacks
+        #region Callbacks
+        void SplitViewChange(GeometryChangedEvent evt)
+        {
+            EditorPrefs.SetFloat("scriptable_graph_panel_size", evt.newRect.width);
+        }
+
         void NodeSelected(NodeView node)
         {
             OnNodeSelected?.Invoke(node);

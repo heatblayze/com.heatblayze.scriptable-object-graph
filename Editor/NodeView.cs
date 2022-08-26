@@ -68,7 +68,8 @@ namespace ScriptableObjectGraph.Editor
                 foreach (var connection in Node.Ports[i].Connections)
                 {
                     var otherNodeView = Parent.Find(connection.Node);
-                    Parent.ConnectPorts(OutputPorts[i], otherNodeView.InputPorts[connection.PortIndex]);
+                    if (otherNodeView != null)
+                        Parent.ConnectPorts(OutputPorts[i], otherNodeView.InputPorts[connection.PortIndex]);
                 }
             }
         }

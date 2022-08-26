@@ -10,6 +10,12 @@ using UnityEngine.UIElements;
 
 namespace ScriptableObjectGraph.Editor
 {
+    [System.Serializable]
+    public class CopyContainer
+    {
+        public List<NodeBase> elements = new List<NodeBase>();
+    }
+
     public class ScriptableGraphView : GraphView
     {
         public new class UxmlFactory : UxmlFactory<ScriptableGraphView, GraphView.UxmlTraits> { }
@@ -38,11 +44,14 @@ namespace ScriptableObjectGraph.Editor
             this.AddManipulator(new ContentDragger());
             this.AddManipulator(new SelectionDragger());
             this.AddManipulator(new RectangleSelector());
-            this.AddManipulator(new ContentZoomer());
+            this.AddManipulator(new ContentZoomer());            
 
             styleSheets.Add((StyleSheet)EditorGUIUtility.Load(ScriptableGraphWindow.PackageRoot + "GraphStyles.uss"));
 
             graphViewChanged += OnChanges;
+            serializeGraphElements += SerializeData;
+            unserializeAndPaste += UnserializeAndPaste;
+
             Undo.undoRedoPerformed += OnUndo;
         }
 
@@ -150,6 +159,68 @@ namespace ScriptableObjectGraph.Editor
             return graphViewChange;
         }
 
+        string SerializeData(IEnumerable<GraphElement> elements)
+        {
+            var nodeDic = new Dictionary<NodeBase, NodeBase>();
+            foreach(var element in elements)
+            {
+                if (element is NodeView nodeView)
+                {
+                    nodeDic.Add(nodeView.Node, nodeView.Node.Clone());
+                }
+            }
+
+            foreach(var node in nodeDic)
+            {
+                for (int i = 0; i < node.Key.Ports.Length; i++)
+                {
+                    foreach(var connection in node.Key.Ports[i].Connections)
+                    {
+                        if (connection.Node == null) continue;
+                        if(nodeDic.TryGetValue(connection.Node, out NodeBase otherNode))
+                        {
+                            node.Value.Ports[i].Connections.Add(new NodeConnection()
+                            {
+                                Node = otherNode,
+                                PortIndex = connection.PortIndex
+                            });
+                        }
+                    }
+                }
+            }
+
+            var container = new CopyContainer();
+            container.elements = nodeDic.Values.ToList();
+            var str = JsonUtility.ToJson(container);
+            return str;
+        }
+
+        void UnserializeAndPaste(string operationName, string data)
+        {
+            var elements = JsonUtility.FromJson<CopyContainer>(data);
+            var createdNodeViews = new List<NodeView>();
+
+            if (elements.elements != null && elements.elements.Count > 0)
+            {
+                Undo.IncrementCurrentGroup();
+
+                foreach (var element in elements.elements)
+                {
+                    var factory = NodeViewFactoryCache.GetFactory(element.GetType());
+                    createdNodeViews.Add(InsertNode(factory, element, element.Position));
+                }
+
+                Undo.SetCurrentGroupName("Paste nodes");
+
+                ClearSelection();
+
+                foreach (var node in createdNodeViews)
+                {
+                    node.ConnectOutputs();
+                    AddToSelection(node);
+                }
+            }
+        }
         #endregion
 
         #region Public Methods
@@ -183,7 +254,9 @@ namespace ScriptableObjectGraph.Editor
 
         public NodeView Find(NodeBase item)
         {
-            return _nodeDictionary[item];
+            if (_nodeDictionary.ContainsKey(item))
+                return _nodeDictionary[item];
+            return null;
         }
 
         public void ConnectPorts(Port parent, Port child)
@@ -247,12 +320,8 @@ namespace ScriptableObjectGraph.Editor
         #endregion
 
         #region Node Creation
-        void CreateNode(NodeViewFactoryBase factory, System.Type type, Vector2 position)
+        NodeView InsertNode(NodeViewFactoryBase factory, NodeBase node, Vector2 position)
         {
-            Undo.IncrementCurrentGroup();
-
-            var node = Asset.CreateNode(type);
-            node.Initialize(Asset);
             node.Position = position;
 
             Undo.RecordObject((ScriptableObject)Asset, "Add node");
@@ -264,11 +333,22 @@ namespace ScriptableObjectGraph.Editor
 
             Undo.RegisterCreatedObjectUndo(node, "Create node");
 
-            Undo.SetCurrentGroupName("Create Node");
-            CreateNodeView(factory, node);
+
+            return CreateNodeView(factory, node);
         }
 
-        void CreateNodeView(NodeViewFactoryBase factory, NodeBase node)
+        NodeView CreateNode(NodeViewFactoryBase factory, Type type, Vector2 position)
+        {
+            Undo.IncrementCurrentGroup();
+            var node = Asset.CreateNode(type);
+            node.Initialize(Asset);
+            var nodeView = InsertNode(factory, node, position);
+
+            Undo.SetCurrentGroupName("Create Node");
+            return nodeView;
+        }
+
+        NodeView CreateNodeView(NodeViewFactoryBase factory, NodeBase node)
         {
             var nodeView = factory.CreateNodeView(node);
             nodeView.Parent = this;
@@ -289,6 +369,8 @@ namespace ScriptableObjectGraph.Editor
 
             nodeView.OnNodeSelected += NodeSelected;
             nodeView.OnNodeUnselected += NodeUnselected;
+
+            return nodeView;
         }
 
         #endregion

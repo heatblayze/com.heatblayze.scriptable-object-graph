@@ -31,9 +31,9 @@ namespace ScriptableObjectGraph
         [SerializeField]
         NodeComponentList _components;
 
-        public NodePort[] Ports => _connections;
+        public NodePort[] Ports => _ports;
         [SerializeField]
-        protected NodePort[] _connections;
+        protected NodePort[] _ports;
 
         public void Initialize(INodeContainerBase parent)
         {
@@ -42,5 +42,20 @@ namespace ScriptableObjectGraph
         }
 
         protected abstract void OnCreated();
+
+        public virtual NodeBase Clone()
+        {
+            var clone = (NodeBase)CreateInstance(GetType());
+            clone.name = name + " Copy";
+            clone._position = _position + new Vector2(20, 20);
+            clone._parent = _parent;
+            clone._components = Components.Clone();
+            clone._ports = new NodePort[Ports.Length];
+            for (int i = 0; i < Ports.Length; i++)
+            {
+                clone._ports[i] = new NodePort();
+            }
+            return clone;
+        }
     }
 }
