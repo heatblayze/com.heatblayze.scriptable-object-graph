@@ -36,7 +36,7 @@ namespace ScriptableObjectGraph.Editor
                 {
                     var matchingBase = GetBaseType(factory.Key);
                     var args = matchingBase.GetGenericArguments();
-                    if (args[0] == type)
+                    if (type.IsAssignableFrom(args[0]))
                         return factory.Value;
                 }
                 return null;
