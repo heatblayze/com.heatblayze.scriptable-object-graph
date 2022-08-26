@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace ScriptableObjectGraph.Editor
 {
@@ -14,14 +15,20 @@ namespace ScriptableObjectGraph.Editor
         public event Action<NodeView> OnNodeSelected;
         public event Action<NodeView> OnNodeUnselected;
 
+        public event Action<NodeView> OnNodeDoubleClick;
+
         public Port[] InputPorts;
         public Port[] OutputPorts;
 
         public virtual int InputPortCount => 1;
 
+        DateTime _clickTime;
+
         public NodeView(NodeBase node)
         {
             Node = node;
+
+            this.RegisterCallback<PointerDownEvent>(MouseDown, TrickleDown.TrickleDown);
         }
 
         public override void OnSelected()
@@ -34,6 +41,15 @@ namespace ScriptableObjectGraph.Editor
         {
             base.OnUnselected();
             OnNodeUnselected?.Invoke(this);
+        }
+
+        void MouseDown(PointerDownEvent evt)
+        {
+            if (evt.clickCount >= 2)
+            {
+                OnNodeDoubleClick?.Invoke(this);
+            }
+            _clickTime = DateTime.Now;
         }
 
         #region Ports

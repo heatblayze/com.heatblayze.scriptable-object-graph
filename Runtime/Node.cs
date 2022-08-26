@@ -23,9 +23,9 @@ namespace ScriptableObjectGraph
         [SerializeField]
         Vector2 _position;
 
-        public INodeContainerBase Parent => _parent;
+        public GuidScriptable Parent => _parent;
         [SerializeField]
-        INodeContainerBase _parent;
+        GuidScriptable _parent;
 
         public NodeComponentList Components => _components;
         [SerializeField]
@@ -37,7 +37,7 @@ namespace ScriptableObjectGraph
 
         public void Initialize(INodeContainerBase parent)
         {
-            _parent = parent;
+            _parent = (GuidScriptable)parent;
             OnCreated();
         }
 

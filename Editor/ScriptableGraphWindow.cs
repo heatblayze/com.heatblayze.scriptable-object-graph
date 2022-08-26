@@ -1,5 +1,6 @@
 using ScriptableObjectGraph.Internal;
 using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEngine;
@@ -20,6 +21,9 @@ namespace ScriptableObjectGraph.Editor
         InspectorView _inspector;
         VisualElement _inspectorPanel;
         SplitView _splitView;
+        BreadcrumbContainer _breadcrumbContainer;
+
+        List<INodeContainerBase> _crumbTrail = new List<INodeContainerBase>();
 
         bool _guiCreated;
 
@@ -41,8 +45,7 @@ namespace ScriptableObjectGraph.Editor
             {
                 var window = OpenGraphWindow();
                 window._nodeContainer = asset as INodeContainerBase;
-                if(window._graphView != null)
-                    window._graphView.SetAsset(window._nodeContainer);
+                window.SetAsset(window._nodeContainer);
 
                 window.titleContent = new GUIContent($"{((INodeContainerBase)asset).EditorWindowPrefix} Graph");
                 return true;
@@ -63,9 +66,7 @@ namespace ScriptableObjectGraph.Editor
                     var asset = AssetDatabase.LoadAssetAtPath(path, typeof(INodeContainerBase));
                     if(asset != null && typeof(INodeContainerBase).IsAssignableFrom(asset.GetType()))
                     {
-                        _nodeContainer = asset as INodeContainerBase;
-                        if (_graphView != null)
-                            _graphView.SetAsset(_nodeContainer);
+                        SetAsset(asset as INodeContainerBase);
 
                         titleContent = new GUIContent($"{((INodeContainerBase)asset).EditorWindowPrefix} Graph");
                     }
@@ -75,10 +76,19 @@ namespace ScriptableObjectGraph.Editor
             if (_inspector != null)
                 _inspector.Clean();
 
-            if(_graphView != null && !_guiCreated)
+            if (!_guiCreated)
             {
-                _graphView.OnNodeSelected += _inspector.NodeSelected;
-                _graphView.OnNodeUnselected += _inspector.NodeUnselected;
+                if (_graphView != null)
+                {
+                    _graphView.OnNodeSelected += _inspector.NodeSelected;
+                    _graphView.OnNodeUnselected += _inspector.NodeUnselected;
+
+                }
+
+                if(_breadcrumbContainer != null)
+                {
+                    SetBreadcrumbs();
+                }
             }
         }
 
@@ -101,9 +111,14 @@ namespace ScriptableObjectGraph.Editor
             var styles = AssetDatabase.LoadAssetAtPath<StyleSheet>(PackageRoot + "GraphWindow.uss");
             rootVisualElement.styleSheets.Add(styles);
 
+            _breadcrumbContainer = rootVisualElement.Q<BreadcrumbContainer>();
+            _breadcrumbContainer.BreadcrumbSelected += BreadcrumbSelected;
+
             _graphView = rootVisualElement.Q<ScriptableGraphView>();
             if (_nodeContainer != null)
-                _graphView.SetAsset(_nodeContainer);
+            {
+                SetAsset(_nodeContainer);
+            }
 
             _splitView = rootVisualElement.Q<SplitView>();
             _inspectorPanel = _splitView.Q("right-panel");
@@ -124,8 +139,45 @@ namespace ScriptableObjectGraph.Editor
 
             _graphView.OnNodeSelected += NodeSelected;
             _graphView.OnNodeUnselected += NodeUnselected;
-
+            _graphView.OnSelectAsset += GraphAssetSelected;
         }
+
+        void SetAsset(INodeContainerBase nodeContainer)
+        {
+            _nodeContainer = nodeContainer;
+            if (_graphView != null)
+                _graphView.SetAsset(_nodeContainer);
+
+            if (_breadcrumbContainer != null)
+                SetBreadcrumbs();
+        }
+
+        #region Breadcrumbs
+        void SetBreadcrumbs()
+        {
+            _crumbTrail.Clear();
+
+            List<string> breadcrumbs = new List<string>();
+            WriteBreadcrumbs(ref breadcrumbs, (UnityEngine.Object)_nodeContainer);
+
+            _breadcrumbContainer.Breadcrumbs = breadcrumbs.ToArray();
+        }
+
+        void WriteBreadcrumbs(ref List<string> crumbs, UnityEngine.Object target)
+        {
+            crumbs.Insert(0, target.name);
+            _crumbTrail.Insert(0, (INodeContainerBase)target);
+            if (target is NodeBase node)
+            {
+                WriteBreadcrumbs(ref crumbs, (UnityEngine.Object)node.Parent);
+            }
+        }
+
+        void BreadcrumbSelected(string name, int index, int crumbSize)
+        {
+            SetAsset(_crumbTrail[index]);
+        }
+        #endregion
 
         #region Callbacks
         void SplitViewChange(GeometryChangedEvent evt)
@@ -141,6 +193,11 @@ namespace ScriptableObjectGraph.Editor
         void NodeUnselected(NodeView node)
         {
             OnNodeUnselected?.Invoke(node);
+        }
+
+        void GraphAssetSelected(INodeContainerBase container)
+        {
+            SetAsset(container);
         }
         #endregion
     }

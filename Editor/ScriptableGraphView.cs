@@ -28,6 +28,7 @@ namespace ScriptableObjectGraph.Editor
 
         public event Action<NodeView> OnNodeSelected;
         public event Action<NodeView> OnNodeUnselected;
+        public event Action<INodeContainerBase> OnSelectAsset;
 
         NodeView _selectedNode;
 
@@ -75,7 +76,7 @@ namespace ScriptableObjectGraph.Editor
         {
             if (node == null) return;
             if (!Asset.GetNodesInternal().Contains(node)) return;
-            Undo.RecordObject((ScriptableObject)Asset, "DeleteNode");
+            Undo.RegisterCompleteObjectUndo((ScriptableObject)Asset, "DeleteNode");
 
             Asset.DeleteNode(node);
 
@@ -100,6 +101,14 @@ namespace ScriptableObjectGraph.Editor
                 _selectedNode = null;
 
             OnNodeUnselected?.Invoke(node);
+        }
+
+        void NodeDoubleClick(NodeView node)
+        {
+            if(node.Node is INodeContainerBase container)
+            {
+                OnSelectAsset(container);
+            }
         }
         #endregion
 
@@ -298,9 +307,9 @@ namespace ScriptableObjectGraph.Editor
                 if (factory != null)
                 {
                     createdAnyAction = true;
-                    evt.menu.AppendAction($"{factory.ContextMenuName}", (a) =>
+                    evt.menu.AppendAction($"Add {factory.ContextMenuName}", (a) =>
                     {
-                        CreateNode(factory, type, a.eventInfo.localMousePosition);
+                        CreateNode(factory, type, viewTransform.matrix.inverse.MultiplyPoint(a.eventInfo.localMousePosition));
                     });
                 }
             }
@@ -324,15 +333,13 @@ namespace ScriptableObjectGraph.Editor
         {
             node.Position = position;
 
-            Undo.RecordObject((ScriptableObject)Asset, "Add node");
+            Undo.RegisterCompleteObjectUndo((ScriptableObject)Asset, "Add node");
             Asset.AddNode(node);
 
-            //Undo.RegisterCompleteObjectUndo(node, "Insert node asset");
             AssetDatabase.AddObjectToAsset(node, (ScriptableObject)Asset);
             AssetDatabase.SaveAssets();
 
             Undo.RegisterCreatedObjectUndo(node, "Create node");
-
 
             return CreateNodeView(factory, node);
         }
@@ -369,6 +376,7 @@ namespace ScriptableObjectGraph.Editor
 
             nodeView.OnNodeSelected += NodeSelected;
             nodeView.OnNodeUnselected += NodeUnselected;
+            nodeView.OnNodeDoubleClick += NodeDoubleClick;
 
             return nodeView;
         }
