@@ -2,7 +2,7 @@ using ScriptableObjectGraph.Internal;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace ScriptableObjectGraph.Core
+namespace ScriptableObjectGraph
 {
     [System.Serializable]
     public class NodeConnection

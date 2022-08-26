@@ -1,4 +1,4 @@
-using ScriptableObjectGraph.Core;
+using ScriptableObjectGraph;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -77,10 +77,17 @@ namespace ScriptableObjectGraph.Editor
                 GenericMenu menu = new GenericMenu();
 
                 var types = TypeCache.GetTypesDerivedFrom<NodeComponent>();
-                foreach (var type in types)
+                if (types.Count > 0)
                 {
-                    var typeName = ObjectNames.NicifyVariableName(type.Name);
-                    menu.AddItem(new GUIContent(typeName), false, AddComponent, type);
+                    foreach (var type in types)
+                    {
+                        var typeName = ObjectNames.NicifyVariableName(type.Name);
+                        menu.AddItem(new GUIContent(typeName), false, AddComponent, type);
+                    }
+                }
+                else
+                {
+                    menu.AddItem(new GUIContent("<empty>"), false, null);
                 }
 
                 menu.ShowAsContext();

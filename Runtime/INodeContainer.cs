@@ -1,4 +1,4 @@
-using ScriptableObjectGraph.Core;
+using ScriptableObjectGraph;
 using ScriptableObjectGraph.Internal;
 using System;
 using System.Collections;
@@ -15,6 +15,8 @@ namespace ScriptableObjectGraph
             Type GetNodeType();
             IEnumerable<NodeBase> GetNodesInternal();
             NodeBase CreateNode(Type type);
+            void AddNode(NodeBase node);
+            void DeleteNode(NodeBase node);
         }
     }
 
@@ -31,5 +33,17 @@ namespace ScriptableObjectGraph
         }
 
         IEnumerable<T> GetNodes();
+
+        void AddNode(T node);
+        void INodeContainerBase.AddNode(NodeBase node)
+        {
+            AddNode((T)node);
+        }
+
+        void DeleteNode(T node);
+        void INodeContainerBase.DeleteNode(NodeBase node)
+        {
+            DeleteNode((T)node);
+        }
     }
 }

@@ -1,15 +1,15 @@
-using ScriptableObjectGraph.Core;
 using ScriptableObjectGraph.Editor.Internal;
 using ScriptableObjectGraph.Internal;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace ScriptableObjectGraph.Editor
-{    
+{
     public class ScriptableGraphView : GraphView
     {
         public new class UxmlFactory : UxmlFactory<ScriptableGraphView, GraphView.UxmlTraits> { }
@@ -49,16 +49,36 @@ namespace ScriptableObjectGraph.Editor
 
         void OnUndo()
         {
+            AssetDatabase.SaveAssets();
+
             NodeBase selectedNode = _selectedNode?.Node;
 
             if (Asset != null)
                 PopulateView();
 
-            if(selectedNode != null)
+            if (selectedNode != null)
             {
                 this.AddToSelection(_nodeDictionary[selectedNode]);
             }
         }
+
+        #region Asset Management
+        void DeleteNode(NodeBase node)
+        {
+            if (node == null) return;
+            if (!Asset.GetNodesInternal().Contains(node)) return;
+            Undo.RecordObject((ScriptableObject)Asset, "DeleteNode");
+
+            Asset.DeleteNode(node);
+
+            Undo.DestroyObjectImmediate(node);
+
+            Undo.CollapseUndoOperations(Undo.GetCurrentGroup());
+
+            //EditorUtility.SetDirty((ScriptableObject)Asset);
+            AssetDatabase.SaveAssets();
+        }
+        #endregion
 
         #region Node Callbacks
         void NodeSelected(NodeView node)
@@ -83,7 +103,7 @@ namespace ScriptableObjectGraph.Editor
             {
                 _clear = false;
                 return graphViewChange;
-            }                
+            }
 
             if (graphViewChange.edgesToCreate != null)
             {
@@ -96,7 +116,7 @@ namespace ScriptableObjectGraph.Editor
                 });
             }
 
-            if(graphViewChange.elementsToRemove != null)
+            if (graphViewChange.elementsToRemove != null)
             {
                 graphViewChange.elementsToRemove.ForEach(element =>
                 {
@@ -107,9 +127,9 @@ namespace ScriptableObjectGraph.Editor
 
                         parentNodeView.RemoveEdge(edge, childNodeView);
                     }
-                    else if(element is NodeView nodeView)
+                    else if (element is NodeView nodeView)
                     {
-                        // TODO: hmmm..... might need to rework this system a little to allow undo/redo deletion stuff
+                        DeleteNode(nodeView.Node);
                     }
                 });
             }
@@ -216,9 +236,22 @@ namespace ScriptableObjectGraph.Editor
         #region Node Creation
         void CreateNode(NodeViewFactoryBase factory, System.Type type, Vector2 position)
         {
+            Undo.IncrementCurrentGroup();
+
             var node = Asset.CreateNode(type);
             node.Initialize(Asset);
             node.Position = position;
+
+            Undo.RecordObject((ScriptableObject)Asset, "Add node");
+            Asset.AddNode(node);
+
+            //Undo.RegisterCompleteObjectUndo(node, "Insert node asset");
+            AssetDatabase.AddObjectToAsset(node, (ScriptableObject)Asset);
+            AssetDatabase.SaveAssets();
+
+            Undo.RegisterCreatedObjectUndo(node, "Create node");
+
+            Undo.SetCurrentGroupName("Create Node");
             CreateNodeView(factory, node);
         }
 
@@ -227,7 +260,7 @@ namespace ScriptableObjectGraph.Editor
             var nodeView = factory.CreateNodeView(node);
             nodeView.Parent = this;
             nodeView.SetPosition(new Rect(node.Position, Vector2.zero));
-            
+
             _nodeDictionary.Add(node, nodeView);
             _nodes.Add(nodeView);
 
@@ -235,8 +268,8 @@ namespace ScriptableObjectGraph.Editor
 
             var inputs = nodeView.CreateInputPorts();
             var outputs = nodeView.CreateOutputPorts();
-            foreach(var input in inputs) _portDictionary.Add(input, nodeView);
-            foreach(var output in outputs) _portDictionary.Add(output, nodeView);            
+            foreach (var input in inputs) _portDictionary.Add(input, nodeView);
+            foreach (var output in outputs) _portDictionary.Add(output, nodeView);
 
             nodeView.RefreshPorts();
             nodeView.RefreshExpandedState();

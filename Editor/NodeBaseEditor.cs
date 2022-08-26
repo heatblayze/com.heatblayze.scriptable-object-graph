@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using ScriptableObjectGraph.Core;
+using ScriptableObjectGraph;
 
 namespace ScriptableObjectGraph.Editor
 {

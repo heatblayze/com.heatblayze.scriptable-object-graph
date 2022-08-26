@@ -1,4 +1,3 @@
-using ScriptableObjectGraph.Core;
 using System;
 using System.Collections.Generic;
 using UnityEditor;
@@ -104,7 +103,7 @@ namespace ScriptableObjectGraph.Editor
         {
             for (int i = 0; i < InputPorts.Length; i++)
             {
-                if(InputPorts[i] == port) return i;
+                if (InputPorts[i] == port) return i;
             }
             return -1;
         }
@@ -154,7 +153,7 @@ namespace ScriptableObjectGraph.Editor
                 {
                     for (int x = 0; x < Node.Ports[i].Connections.Count; x++)
                     {
-                        if(Node.Ports[i].Connections[x].PortIndex == inputIndex)
+                        if (Node.Ports[i].Connections[x].PortIndex == inputIndex)
                         {
                             Undo.RegisterCompleteObjectUndo(Node, "Remove port");
                             Node.Ports[i].Connections.RemoveAt(x);

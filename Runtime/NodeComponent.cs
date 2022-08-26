@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace ScriptableObjectGraph.Core
+namespace ScriptableObjectGraph
 {
     [Serializable]
     public abstract class NodeComponent { }
