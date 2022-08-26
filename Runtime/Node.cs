@@ -20,11 +20,11 @@ namespace ScriptableObjectGraph
     public abstract class NodeBase : GuidScriptable
     {
         public Vector2 Position { get => _position; set => _position = value; }
-        [SerializeField]
+        [SerializeField, HideInInspector]
         Vector2 _position;
 
         public GuidScriptable Parent => _parent;
-        [SerializeField]
+        [SerializeField, HideInInspector]
         GuidScriptable _parent;
 
         public NodeComponentList Components => _components;
@@ -32,7 +32,7 @@ namespace ScriptableObjectGraph
         NodeComponentList _components;
 
         public NodePort[] Ports => _ports;
-        [SerializeField]
+        [SerializeField, HideInInspector]
         protected NodePort[] _ports;
 
         public void Initialize(INodeContainerBase parent)

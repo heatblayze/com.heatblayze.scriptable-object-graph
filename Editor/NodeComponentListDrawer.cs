@@ -82,7 +82,7 @@ namespace ScriptableObjectGraph.Editor
                     foreach (var type in types)
                     {
                         var typeName = ObjectNames.NicifyVariableName(type.Name);
-                        menu.AddItem(new GUIContent(typeName), false, AddComponent, type);
+                        menu.AddItem(new GUIContent(typeName), false, AddComponent, new Tuple<Type, SerializedProperty>(type, property));
                     }
                 }
                 else
@@ -94,12 +94,15 @@ namespace ScriptableObjectGraph.Editor
             }
         }
 
-        void AddComponent(object typeObj)
+        void AddComponent(object container)
         {
+            var data = container as Tuple<Type, SerializedProperty>;
+
             var index = _components.arraySize;
             _components.InsertArrayElementAtIndex(index);
             var elem = _components.GetArrayElementAtIndex(index);
-            var obj = Activator.CreateInstance((Type)typeObj);
+            var obj = (NodeComponent)Activator.CreateInstance(data.Item1);
+            obj.ParentNode = data.Item2.serializedObject.targetObject as NodeBase;
             elem.managedReferenceValue = obj;
 
             _components.serializedObject.ApplyModifiedProperties();

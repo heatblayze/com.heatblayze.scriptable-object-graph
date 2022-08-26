@@ -10,12 +10,12 @@ namespace ScriptableObjectGraph
         public abstract string EditorWindowPrefix { get; }
 
         public List<T> Children => _children;
-        [SerializeField]
+        [SerializeField, HideInInspector]
         List<T> _children;
 
         public T EntryNode => _entryNode;
 
-        [SerializeField]
+        [SerializeField, HideInInspector]
         T _entryNode;
 
         public IEnumerable<T> GetNodes()
