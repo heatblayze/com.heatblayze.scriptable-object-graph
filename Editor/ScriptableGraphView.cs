@@ -36,7 +36,6 @@ namespace ScriptableObjectGraph.Editor
             Insert(0, new GridBackground());
 
             this.AddManipulator(new ContentDragger());
-            // TODO: implement my own SelectionDragger to allow undo/redo of content position
             this.AddManipulator(new SelectionDragger());
             this.AddManipulator(new RectangleSelector());
             this.AddManipulator(new ContentZoomer());
@@ -75,7 +74,6 @@ namespace ScriptableObjectGraph.Editor
 
             Undo.CollapseUndoOperations(Undo.GetCurrentGroup());
 
-            //EditorUtility.SetDirty((ScriptableObject)Asset);
             AssetDatabase.SaveAssets();
         }
         #endregion
@@ -132,6 +130,21 @@ namespace ScriptableObjectGraph.Editor
                         DeleteNode(nodeView.Node);
                     }
                 });
+            }
+
+            if(graphViewChange.movedElements != null)
+            {
+                Undo.IncrementCurrentGroup();
+                foreach(var item in graphViewChange.movedElements)
+                {
+                    if(item is NodeView nodeView)
+                    {
+                        Undo.RecordObject(nodeView.Node, "Move node");
+                        nodeView.Node.Position = nodeView.GetPosition().position;
+                    }
+                }
+
+                Undo.SetCurrentGroupName("Move node(s)");
             }
 
             return graphViewChange;

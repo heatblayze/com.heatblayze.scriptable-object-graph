@@ -24,12 +24,6 @@ namespace ScriptableObjectGraph.Editor
             Node = node;
         }
 
-        public override void SetPosition(Rect newPos)
-        {
-            base.SetPosition(newPos);
-            Node.Position = newPos.position;
-        }
-
         public override void OnSelected()
         {
             base.OnSelected();

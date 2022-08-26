@@ -19,7 +19,9 @@ namespace ScriptableObjectGraph
 
     public abstract class NodeBase : GuidScriptable
     {
-        public Vector2 Position;
+        public Vector2 Position { get => _position; set => _position = value; }
+        [SerializeField]
+        Vector2 _position;
 
         public INodeContainerBase Parent => _parent;
         [SerializeField]
