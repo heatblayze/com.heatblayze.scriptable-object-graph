@@ -248,10 +248,10 @@ namespace ScriptableObjectGraph.Editor
             _nodeDictionary.Clear();
             _portDictionary.Clear();
             _nodes.Clear();
-
-            var factory = NodeViewFactoryCache.GetFactory(Asset.GetNodeType());
+         
             foreach (var node in Asset.GetNodesInternal())
             {
+                var factory = NodeViewFactoryCache.GetFactory(node.GetType());
                 CreateNodeView(factory, node);
             }
 
