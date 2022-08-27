@@ -95,9 +95,16 @@ namespace ScriptableObjectGraph.Editor
             {
                 foreach (var connection in Node.Ports[i].Connections)
                 {
-                    var otherNodeView = Parent.Find(connection.Node);
-                    if (otherNodeView != null)
-                        Parent.ConnectPorts(OutputPorts[i], otherNodeView.InputPorts[connection.PortIndex]);
+                    if (!connection.ConnectsToExit)
+                    {
+                        var otherNodeView = Parent.Find(connection.Node);
+                        if (otherNodeView != null)
+                            Parent.ConnectPorts(OutputPorts[i], otherNodeView.InputPorts[connection.PortIndex]);
+                    }
+                    else
+                    {
+                        Parent.ConnectPorts(OutputPorts[i], Parent.ExitNode.Port);
+                    }
                 }
             }
         }
@@ -111,11 +118,17 @@ namespace ScriptableObjectGraph.Editor
                 if (node == this) continue;
                 if (startPort.direction == Direction.Output)
                 {
-                    ports.AddRange(node.InputPorts);
+                    if (node is NodeView nodeView)
+                        ports.AddRange(nodeView.InputPorts);
+                    else if(node is ExitNodeView exitNodeView)
+                        ports.Add(exitNodeView.Port);
                 }
                 else
                 {
-                    ports.AddRange(node.OutputPorts);
+                    if (node is NodeView nodeView)
+                        ports.AddRange(nodeView.OutputPorts);
+                    else if (node is EntryNodeView entryNodeView)
+                        ports.Add(entryNodeView.Port);
                 }
             }
 
@@ -131,59 +144,86 @@ namespace ScriptableObjectGraph.Editor
             return -1;
         }
 
-        public virtual void ConnectChild(Edge edge, NodeView child)
+        public virtual void ConnectChild(Edge edge, Node child)
         {
-            var inputIndex = child.GetInputPortIndex(edge.input);
-            if (inputIndex < 0)
+            if (child is NodeView nodeView)
             {
-                Debug.LogError("Child does not match edge's input port");
-                return;
-            }
-
-            for (int i = 0; i < OutputPorts.Length; i++)
-            {
-                if (OutputPorts[i] == edge.output)
+                var inputIndex = nodeView.GetInputPortIndex(edge.input);
+                if (inputIndex < 0)
                 {
-                    Undo.RegisterCompleteObjectUndo(Node, "Connect port");
+                    Debug.LogError("Child does not match edge's input port");
+                    return;
+                }
 
-                    if (OutputPorts[i].capacity == Port.Capacity.Single)
+                for (int i = 0; i < OutputPorts.Length; i++)
+                {
+                    if (OutputPorts[i] == edge.output)
                     {
-                        Node.Ports[i].Connections.Clear();
+                        Undo.RecordObject(Node, "Connect port");
+
+                        if (OutputPorts[i].capacity == Port.Capacity.Single)
+                        {
+                            Node.Ports[i].Connections.Clear();
+                        }
+
+                        Node.Ports[i].Connections.Add(new NodeConnection()
+                        {
+                            Node = nodeView.Node,
+                            PortIndex = inputIndex
+                        });
+                        break;
                     }
-
-                    Node.Ports[i].Connections.Add(new NodeConnection()
+                }
+            }
+            else if(child is ExitNodeView)
+            {
+                for (int i = 0; i < OutputPorts.Length; i++)
+                {
+                    if (OutputPorts[i] == edge.output)
                     {
-                        Node = child.Node,
-                        PortIndex = inputIndex
-                    });
-                    break;
+                        Undo.RecordObject(Node, "Connect port");
+
+                        if (OutputPorts[i].capacity == Port.Capacity.Single)
+                        {
+                            Node.Ports[i].Connections.Clear();
+                        }
+
+                        Node.Ports[i].Connections.Add(new NodeConnection()
+                        {
+                            ConnectsToExit = true
+                        });
+                        break;
+                    }
                 }
             }
         }
 
-        public virtual void RemoveEdge(Edge edge, NodeView child)
+        public virtual void RemoveEdge(Edge edge, Node child)
         {
-            var inputIndex = child.GetInputPortIndex(edge.input);
-            if (inputIndex < 0)
+            if (child is NodeView node)
             {
-                Debug.LogError("Child does not match edge's input port");
-                return;
-            }
-
-            for (int i = 0; i < OutputPorts.Length; i++)
-            {
-                if (OutputPorts[i] == edge.output)
+                var inputIndex = node.GetInputPortIndex(edge.input);
+                if (inputIndex < 0)
                 {
-                    for (int x = 0; x < Node.Ports[i].Connections.Count; x++)
+                    Debug.LogError("Child does not match edge's input port");
+                    return;
+                }
+
+                for (int i = 0; i < OutputPorts.Length; i++)
+                {
+                    if (OutputPorts[i] == edge.output)
                     {
-                        if (Node.Ports[i].Connections[x].PortIndex == inputIndex)
+                        for (int x = 0; x < Node.Ports[i].Connections.Count; x++)
                         {
-                            Undo.RegisterCompleteObjectUndo(Node, "Remove port");
-                            Node.Ports[i].Connections.RemoveAt(x);
-                            break;
+                            if (Node.Ports[i].Connections[x].PortIndex == inputIndex)
+                            {
+                                Undo.RecordObject(Node, "Remove port");
+                                Node.Ports[i].Connections.RemoveAt(x);
+                                break;
+                            }
                         }
+                        break;
                     }
-                    break;
                 }
             }
         }

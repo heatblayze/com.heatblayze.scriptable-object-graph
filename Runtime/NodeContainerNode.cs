@@ -18,6 +18,24 @@ namespace ScriptableObjectGraph
         [SerializeField, HideInInspector]
         T _entryNode;
 
+        public Vector2 EntryNodePosition { get => _entryNodePosition; set => _entryNodePosition = value; }
+        [SerializeField, HideInInspector]
+        Vector2 _entryNodePosition = new Vector2(140, 375);
+
+        public Vector2 ExitNodePosition { get => _exitNodePosition; set => _exitNodePosition = value; }
+        [SerializeField, HideInInspector]
+        Vector2 _exitNodePosition = new Vector2(1000, 375);
+
+        public NodeBase GetEntryNode()
+        {
+            return _entryNode;
+        }
+
+        public void SetEntryNode(T node)
+        {
+            _entryNode = node;
+        }
+
         public IEnumerable<T> GetNodes()
         {
             return _children;

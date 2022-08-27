@@ -7,6 +7,7 @@ namespace ScriptableObjectGraph
     [System.Serializable]
     public class NodeConnection
     {
+        public bool ConnectsToExit;
         public NodeBase Node;
         public int PortIndex;
     }

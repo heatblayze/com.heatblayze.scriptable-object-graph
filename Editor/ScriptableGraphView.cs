@@ -23,18 +23,21 @@ namespace ScriptableObjectGraph.Editor
         [SerializeField]
         INodeContainerBase _asset;
 
-        public List<NodeView> NodeViews => _nodes;
+        public List<Node> NodeViews => _nodes;
 
         public event Action<NodeView> OnNodeSelected;
         public event Action<NodeView> OnNodeUnselected;
         public event Action<INodeContainerBase> OnSelectAsset;
 
+        public EntryNodeView EntryNode { get; private set; }
+        public ExitNodeView ExitNode { get; private set; }
+
         public NodeView SelectedNode => _selectedNode;
         NodeView _selectedNode;
 
         Dictionary<NodeBase, NodeView> _nodeDictionary = new Dictionary<NodeBase, NodeView>();
-        Dictionary<Port, NodeView> _portDictionary = new Dictionary<Port, NodeView>();
-        List<NodeView> _nodes = new List<NodeView>();
+        Dictionary<Port, Node> _portDictionary = new Dictionary<Port, Node>();
+        List<Node> _nodes = new List<Node>();
 
         bool _clear;
 
@@ -45,7 +48,7 @@ namespace ScriptableObjectGraph.Editor
             this.AddManipulator(new ContentDragger());
             this.AddManipulator(new SelectionDragger());
             this.AddManipulator(new RectangleSelector());
-            this.AddManipulator(new ContentZoomer());            
+            this.AddManipulator(new ContentZoomer());
 
             styleSheets.Add((StyleSheet)EditorGUIUtility.Load(ScriptableGraphWindow.PackageRoot + "GraphStyles.uss"));
 
@@ -105,9 +108,17 @@ namespace ScriptableObjectGraph.Editor
 
         void NodeDoubleClick(NodeView node)
         {
-            if(node.Node is INodeContainerBase container)
+            if (node.Node is INodeContainerBase container)
             {
                 OnSelectAsset(container);
+            }
+        }
+
+        void SelectParentAsset()
+        {
+            if (Asset is NodeBase node)
+            {
+                OnSelectAsset((INodeContainerBase)node.Parent);
             }
         }
         #endregion
@@ -125,10 +136,13 @@ namespace ScriptableObjectGraph.Editor
             {
                 graphViewChange.edgesToCreate.ForEach(edge =>
                 {
-                    var parentNodeView = _portDictionary[edge.output];
-                    var childNodeView = _portDictionary[edge.input];
+                    var parentNode = _portDictionary[edge.output];
+                    var childNode = _portDictionary[edge.input];
 
-                    parentNodeView.ConnectChild(edge, childNodeView);
+                    if (parentNode is NodeView nodeView)
+                        nodeView.ConnectChild(edge, childNode);
+                    else if (parentNode is EntryNodeView entryNode)
+                        entryNode.SetEntryNode(childNode);
                 });
             }
 
@@ -138,10 +152,11 @@ namespace ScriptableObjectGraph.Editor
                 {
                     if (element is Edge edge)
                     {
-                        var parentNodeView = _portDictionary[edge.output];
-                        var childNodeView = _portDictionary[edge.input];
+                        var parentNode = _portDictionary[edge.output];
+                        var childNode = _portDictionary[edge.input];
 
-                        parentNodeView.RemoveEdge(edge, childNodeView);
+                        if (parentNode is NodeView nodeView)
+                            nodeView.RemoveEdge(edge, childNode);
                     }
                     else if (element is NodeView nodeView)
                     {
@@ -150,15 +165,23 @@ namespace ScriptableObjectGraph.Editor
                 });
             }
 
-            if(graphViewChange.movedElements != null)
+            if (graphViewChange.movedElements != null)
             {
                 Undo.IncrementCurrentGroup();
-                foreach(var item in graphViewChange.movedElements)
+                foreach (var item in graphViewChange.movedElements)
                 {
-                    if(item is NodeView nodeView)
+                    if (item is NodeView nodeView)
                     {
                         Undo.RecordObject(nodeView.Node, "Move node");
                         nodeView.Node.Position = nodeView.GetPosition().position;
+                    }
+                    else if (item is EntryNodeView entryNode)
+                    {
+                        Asset.EntryNodePosition = entryNode.GetPosition().position;
+                    }
+                    else if (item is ExitNodeView exitNodeView)
+                    {
+                        Asset.ExitNodePosition = exitNodeView.GetPosition().position;
                     }
                 }
 
@@ -171,7 +194,7 @@ namespace ScriptableObjectGraph.Editor
         string SerializeData(IEnumerable<GraphElement> elements)
         {
             var nodeDic = new Dictionary<NodeBase, NodeBase>();
-            foreach(var element in elements)
+            foreach (var element in elements)
             {
                 if (element is NodeView nodeView)
                 {
@@ -179,14 +202,14 @@ namespace ScriptableObjectGraph.Editor
                 }
             }
 
-            foreach(var node in nodeDic)
+            foreach (var node in nodeDic)
             {
                 for (int i = 0; i < node.Key.Ports.Length; i++)
                 {
-                    foreach(var connection in node.Key.Ports[i].Connections)
+                    foreach (var connection in node.Key.Ports[i].Connections)
                     {
                         if (connection.Node == null) continue;
-                        if(nodeDic.TryGetValue(connection.Node, out NodeBase otherNode))
+                        if (nodeDic.TryGetValue(connection.Node, out NodeBase otherNode))
                         {
                             node.Value.Ports[i].Connections.Add(new NodeConnection()
                             {
@@ -233,7 +256,6 @@ namespace ScriptableObjectGraph.Editor
         #endregion
 
         #region Public Methods
-
         public void SetAsset(INodeContainerBase asset)
         {
             Asset = asset;
@@ -248,16 +270,26 @@ namespace ScriptableObjectGraph.Editor
             _nodeDictionary.Clear();
             _portDictionary.Clear();
             _nodes.Clear();
-         
+
+            CreateEntryExitNodes();
+
             foreach (var node in Asset.GetNodesInternal())
             {
                 var factory = NodeViewFactoryCache.GetFactory(node.GetType());
                 CreateNodeView(factory, node);
             }
 
+            var entryDataNode = Asset.GetEntryNode();
+            if (entryDataNode != null)
+            {
+                var entryNodeView = _nodeDictionary[entryDataNode];
+                EntryNode.Connect(entryNodeView);
+            }
+
             foreach (var node in _nodes)
             {
-                node.ConnectOutputs();
+                if (node is NodeView nodeView)
+                    nodeView.ConnectOutputs();
             }
         }
 
@@ -273,7 +305,6 @@ namespace ScriptableObjectGraph.Editor
             var edge = parent.ConnectTo(child);
             AddElement(edge);
         }
-
         #endregion
 
         #region Overrides
@@ -294,7 +325,7 @@ namespace ScriptableObjectGraph.Editor
                         createdAnyAction = true;
                         evt.menu.AppendAction($"Add {factory.ContextMenuName}", (a) =>
                         {
-                            CreateNode(factory, type, a.eventInfo.localMousePosition);
+                            CreateNodeContext(a, factory, type);
                         });
                     }
                 }
@@ -309,7 +340,7 @@ namespace ScriptableObjectGraph.Editor
                     createdAnyAction = true;
                     evt.menu.AppendAction($"Add {factory.ContextMenuName}", (a) =>
                     {
-                        CreateNode(factory, type, viewTransform.matrix.inverse.MultiplyPoint(a.eventInfo.localMousePosition));
+                        CreateNodeContext(a, factory, type);
                     });
                 }
             }
@@ -322,13 +353,62 @@ namespace ScriptableObjectGraph.Editor
 
         public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
         {
-            var nodeView = _portDictionary[startPort];
-            return nodeView.GetCompatiblePorts(startPort);
+            var node = _portDictionary[startPort];
+            if (node is NodeView nodeView)
+            {
+                return nodeView.GetCompatiblePorts(startPort);
+            }
+            else if (node is EntryNodeView entryNodeView)
+            {
+                return _portDictionary.Values.Where(x => x is NodeView).Select(x => ((NodeView)x).InputPorts[0]).ToList();
+            }
+            else if (node is ExitNodeView exitNodeView)
+            {
+                return _portDictionary.Values.Where(x => x is NodeView).SelectMany(x => ((NodeView)x).OutputPorts).ToList();
+            }
+            return null;
         }
 
         #endregion
 
         #region Node Creation
+        void CreateEntryExitNodes()
+        {
+            EntryNode = new EntryNodeView();
+            EntryNode.Parent = this;
+            ExitNode = new ExitNodeView();
+            ExitNode.Parent = this;
+
+            EntryNode.SetPosition(new Rect(Asset.EntryNodePosition, Vector2.zero));
+            ExitNode.SetPosition(new Rect(Asset.ExitNodePosition, Vector2.zero));
+
+            EntryNode.RefreshPorts();
+            EntryNode.RefreshExpandedState();
+            ExitNode.RefreshPorts();
+            ExitNode.RefreshExpandedState();
+
+            AddElement(EntryNode);
+            AddElement(ExitNode);
+
+            _portDictionary.Add(EntryNode.Port, EntryNode);
+            _portDictionary.Add(ExitNode.Port, ExitNode);
+
+            _nodes.Add(EntryNode);
+            _nodes.Add(ExitNode);
+
+            EntryNode.OnDoubleClick += SelectParentAsset;
+            ExitNode.OnDoubleClick += SelectParentAsset;
+        }
+
+        void CreateNodeContext(DropdownMenuAction a, INodeViewFactory factory, Type type)
+        {
+            var nodeView = CreateNode(factory, type, viewTransform.matrix.inverse.MultiplyPoint(a.eventInfo.localMousePosition));
+            if (Asset.GetEntryNode() == nodeView.Node)
+            {
+                EntryNode.Connect(nodeView);
+            }
+        }
+
         NodeView InsertNode(INodeViewFactory factory, NodeBase node, Vector2 position)
         {
             node.Position = position;
