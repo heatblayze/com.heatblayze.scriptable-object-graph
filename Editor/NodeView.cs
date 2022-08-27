@@ -36,7 +36,12 @@ namespace ScriptableObjectGraph.Editor
         public virtual void Init(NodeBase node)
         {
             Node = node;
-            title = node.name;
+            title = Node.name;
+        }
+
+        public virtual void UpdateContents()
+        {
+            title = Node.name;
         }
 
         public override void OnSelected()

@@ -29,6 +29,7 @@ namespace ScriptableObjectGraph.Editor
         public event Action<NodeView> OnNodeUnselected;
         public event Action<INodeContainerBase> OnSelectAsset;
 
+        public NodeView SelectedNode => _selectedNode;
         NodeView _selectedNode;
 
         Dictionary<NodeBase, NodeView> _nodeDictionary = new Dictionary<NodeBase, NodeView>();

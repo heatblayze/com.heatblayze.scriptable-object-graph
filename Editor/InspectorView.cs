@@ -12,6 +12,7 @@ namespace ScriptableObjectGraph.Editor
 
         UnityEditor.Editor _editor;
         NodeView _currentNode;
+        IMGUIContainer _container;
 
         public InspectorView()
         {
@@ -26,9 +27,21 @@ namespace ScriptableObjectGraph.Editor
 
             _currentNode = nodeView;
             _editor = UnityEditor.Editor.CreateEditor(nodeView.Node);
-            var container = new IMGUIContainer(_editor.OnInspectorGUI);
+            _container = new IMGUIContainer(() =>
+            {
+                using(var scope = new EditorGUI.ChangeCheckScope())
+                {
+                    _editor.OnInspectorGUI();
 
-            Add(container);
+                    if (scope.changed)
+                    {
+                        if (_currentNode != null)
+                            _currentNode.UpdateContents();
+                    }
+                }
+            });
+
+            Add(_container);
         }
 
         public void NodeUnselected(NodeView nodeView)
