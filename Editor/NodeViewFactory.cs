@@ -1,82 +1,71 @@
-using ScriptableObjectGraph.Editor.Internal;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 namespace ScriptableObjectGraph.Editor
 {
-    namespace Internal
+    public interface INodeViewFactory
     {
-        public abstract class NodeViewFactoryBase
+        string ContextMenuName { get; }
+        NodeView Create(NodeBase node);
+    }
+
+    public abstract class NodeViewTraitsBase
+    {
+        public virtual void Init(NodeView nodeView, NodeBase node)
         {
-            public abstract string ContextMenuName { get; }
-            internal abstract NodeView CreateNodeView(GuidScriptable guidScriptable);
-        }
-
-        internal static class NodeViewFactoryCache
-        {
-            static Dictionary<Type, NodeViewFactoryBase> _factories;
-            public static Dictionary<Type, NodeViewFactoryBase> Factories
-            {
-                get
-                {
-                    if (_factories == null)
-                        FillFactories();
-                    return _factories;
-                }
-            }
-
-            public static NodeViewFactoryBase GetFactory(Type type)
-            {
-                foreach (var factory in Factories)
-                {
-                    var matchingBase = GetBaseType(factory.Key);
-                    var args = matchingBase.GetGenericArguments();
-                    if (type.IsAssignableFrom(args[0]))
-                        return factory.Value;
-                }
-                return null;
-            }
-
-            static Type GetBaseType(Type type)
-            {
-                if (type.BaseType.BaseType == typeof(NodeViewFactoryBase))
-                    return type.BaseType;
-                return GetBaseType(type.BaseType);
-            }
-
-            static void FillFactories()
-            {
-                _factories = new Dictionary<Type, NodeViewFactoryBase>();
-
-                var coreType = typeof(NodeViewFactoryBase);
-                var types = AppDomain.CurrentDomain.GetAssemblies()
-                    .SelectMany(a =>
-                        a.GetTypes()
-                        .Where(t =>
-                            coreType.IsAssignableFrom(t)
-                            && !t.IsAbstract
-                            && !t.ContainsGenericParameters));
-
-                foreach(var type in types)
-                {
-                    _factories.Add(type, Activator.CreateInstance(type) as NodeViewFactoryBase);
-                }
-            }
+            nodeView.Init(node);
         }
     }
 
-    public abstract class NodeViewFactory<T> : NodeViewFactoryBase where T : GuidScriptable
+    public abstract class NodeViewFactory<TCreatedType, TNodeType, TTraits> : INodeViewFactory
+        where TCreatedType : NodeView, new() where TTraits : NodeViewTraitsBase, new()
     {
-        internal override NodeView CreateNodeView(GuidScriptable guidScriptable)
+        public abstract string ContextMenuName { get; }
+
+        private TTraits _traits;
+
+        public virtual NodeView Create(NodeBase node)
         {
-            return GenerateNodeView((T)guidScriptable);
+            TCreatedType nodeView = new TCreatedType();
+            if (_traits == null)
+                _traits = new TTraits();
+            _traits.Init(nodeView, node);
+            return nodeView;
+        }
+    }
+
+    public static class NodeViewFactoryCache
+    {
+        static Dictionary<Type, INodeViewFactory> factories;
+
+        static NodeViewFactoryCache()
+        {
+            factories = new Dictionary<Type, INodeViewFactory>();
+
+            var types = TypeCache.GetTypesDerivedFrom(typeof(NodeView))
+                .Where(x => x.GetNestedTypes().Any(n => typeof(INodeViewFactory).IsAssignableFrom(n))).ToList();
+            types.Add(typeof(NodeView));
+
+            foreach (var type in types)
+            {
+                var factoryType = type.GetNestedTypes().First(x => typeof(INodeViewFactory).IsAssignableFrom(x));
+                var factory = (INodeViewFactory)Activator.CreateInstance(factoryType);
+                var nodeType = factoryType.BaseType.GetGenericArguments().First(x => typeof(NodeBase).IsAssignableFrom(x));
+                factories.Add(nodeType, factory);
+            }
         }
 
-        protected abstract NodeView GenerateNodeView(T asset);
+        public static INodeViewFactory GetFactory(Type nodeType)
+        {
+            if (factories.TryGetValue(nodeType, out INodeViewFactory factory))
+                return factory;
+            return null;
+        }
     }
 }

@@ -7,9 +7,15 @@ using UnityEngine.UIElements;
 
 namespace ScriptableObjectGraph.Editor
 {
-    public abstract class NodeView : Node
+    public class NodeView : Node
     {
-        public NodeBase Node;
+        public class NodeViewTraits : NodeViewTraitsBase { }
+        public class NodeViewFactory : NodeViewFactory<NodeView, NodeBase, NodeViewTraits>
+        {
+            public override string ContextMenuName => "Node";
+        }
+
+        public NodeBase Node { get; protected set; }
         public ScriptableGraphView Parent;
 
         public event Action<NodeView> OnNodeSelected;
@@ -22,11 +28,15 @@ namespace ScriptableObjectGraph.Editor
 
         public virtual int InputPortCount => 1;
 
-        public NodeView(NodeBase node)
+        public NodeView()
+        {
+            this.RegisterCallback<PointerDownEvent>(MouseDown, TrickleDown.TrickleDown);
+        }
+
+        public virtual void Init(NodeBase node)
         {
             Node = node;
-
-            this.RegisterCallback<PointerDownEvent>(MouseDown, TrickleDown.TrickleDown);
+            title = node.name;
         }
 
         public override void OnSelected()

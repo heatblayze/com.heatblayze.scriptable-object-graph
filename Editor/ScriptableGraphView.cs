@@ -1,4 +1,3 @@
-using ScriptableObjectGraph.Editor.Internal;
 using ScriptableObjectGraph.Internal;
 using System;
 using System.Collections.Generic;
@@ -329,7 +328,7 @@ namespace ScriptableObjectGraph.Editor
         #endregion
 
         #region Node Creation
-        NodeView InsertNode(NodeViewFactoryBase factory, NodeBase node, Vector2 position)
+        NodeView InsertNode(INodeViewFactory factory, NodeBase node, Vector2 position)
         {
             node.Position = position;
 
@@ -344,7 +343,7 @@ namespace ScriptableObjectGraph.Editor
             return CreateNodeView(factory, node);
         }
 
-        NodeView CreateNode(NodeViewFactoryBase factory, Type type, Vector2 position)
+        NodeView CreateNode(INodeViewFactory factory, Type type, Vector2 position)
         {
             Undo.IncrementCurrentGroup();
             var node = Asset.CreateNode(type);
@@ -355,9 +354,9 @@ namespace ScriptableObjectGraph.Editor
             return nodeView;
         }
 
-        NodeView CreateNodeView(NodeViewFactoryBase factory, NodeBase node)
+        NodeView CreateNodeView(INodeViewFactory factory, NodeBase node)
         {
-            var nodeView = factory.CreateNodeView(node);
+            var nodeView = factory.Create(node);
             nodeView.Parent = this;
             nodeView.SetPosition(new Rect(node.Position, Vector2.zero));
 
