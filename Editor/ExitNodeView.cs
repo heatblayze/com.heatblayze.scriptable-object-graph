@@ -20,6 +20,10 @@ namespace ScriptableObjectGraph.Editor
             outputContainer.Add(Port);
             title = "Exit";
 
+            ColorUtility.TryParseHtmlString("#6A0000", out Color color);
+            titleContainer.style.backgroundColor = color;
+            titleContainer.style.width = 68;
+
             this.RegisterCallback<PointerDownEvent>(MouseDown, TrickleDown.TrickleDown);
         }
 

@@ -21,6 +21,9 @@ namespace ScriptableObjectGraph.Editor
             outputContainer.Add(Port);
             title = "Entry";
 
+            ColorUtility.TryParseHtmlString("#1B5718", out Color color);
+            titleContainer.style.backgroundColor = color;
+
             this.RegisterCallback<PointerDownEvent>(MouseDown, TrickleDown.TrickleDown);
         }
 
