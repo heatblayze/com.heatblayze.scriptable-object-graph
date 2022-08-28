@@ -35,6 +35,9 @@ namespace ScriptableObjectGraph.Editor
         public BreadcrumbContainer()
         {
             _toolbar = new Toolbar();
+            _toolbar.style.height = new StyleLength(StyleKeyword.Auto);
+            _toolbar.style.flexGrow = 1;
+
             Add(_toolbar);
             _toolbarBreadcrumbs = new ToolbarBreadcrumbs();
             _toolbar.Add(_toolbarBreadcrumbs);
