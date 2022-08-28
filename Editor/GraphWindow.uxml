@@ -2,10 +2,10 @@
     <Style src="project://database/Packages/com.heatblayze.scriptable-object-graph/Editor/GraphWindow.uss?fileID=7433441132597879392&amp;guid=08b19262c2e09444693af7a671b0ef57&amp;type=3#GraphWindow" />
     <ScriptableObjectGraph.Editor.SplitView fixed-pane-initial-dimension="250" fixed-pane-index="1">
         <ui:VisualElement name="left-panel">
-            <ui:VisualElement style="height: 22px;">
+            <ScriptableObjectGraph.Editor.ScriptableGraphView focusable="true" style="flex-grow: 1;" />
+            <ui:VisualElement style="height: 22px; position: absolute; left: 0; right: 0; top: -1px;">
                 <ScriptableObjectGraph.Editor.BreadcrumbContainer style="flex-grow: 1;" />
             </ui:VisualElement>
-            <ScriptableObjectGraph.Editor.ScriptableGraphView focusable="true" style="flex-grow: 1;" />
         </ui:VisualElement>
         <ui:VisualElement name="right-panel" style="padding-top: 2px;">
             <ui:VisualElement style="padding-left: 3px; background-color: rgb(37, 37, 37); height: 20px; justify-content: center;">
