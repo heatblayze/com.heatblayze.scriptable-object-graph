@@ -32,7 +32,7 @@ namespace ScriptableObjectGraph
         [SerializeField]
         NodeComponentList _components;
 
-        public NodePort[] Ports => _ports;
+        public NodePort[] Ports { get => _ports; set => _ports = value; }
         [SerializeField, HideInInspector]
         protected NodePort[] _ports;
 

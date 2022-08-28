@@ -39,7 +39,7 @@ namespace ScriptableObjectGraph.Editor
         Dictionary<Port, Node> _portDictionary = new Dictionary<Port, Node>();
         List<Node> _nodes = new List<Node>();
 
-        bool _clear;
+        bool _manual;
 
         public ScriptableGraphView()
         {
@@ -121,14 +121,36 @@ namespace ScriptableObjectGraph.Editor
                 OnSelectAsset((INodeContainerBase)node.Parent);
             }
         }
+
+        public void UpdatePorts(Node node, IEnumerable<Port> oldPorts, IEnumerable<Port> newPorts)
+        {
+            foreach (Port port in oldPorts)
+            {
+                _portDictionary.Remove(port);                
+
+                foreach (var connection in port.connections)
+                {
+                    if (port.direction == Direction.Output)
+                        connection.input.Disconnect(connection);
+                    else if (port.direction == Direction.Input)
+                        connection.output.Disconnect(connection);
+
+                    RemoveElement(connection);
+                }
+
+                port.DisconnectAll();
+            }
+            foreach (Port port in newPorts)
+                _portDictionary.Add(port, node);
+        }
         #endregion
 
         #region Graph Callbacks
         GraphViewChange OnChanges(GraphViewChange graphViewChange)
         {
-            if (_clear)
+            if (_manual)
             {
-                _clear = false;
+                _manual = false;
                 return graphViewChange;
             }
 
@@ -264,7 +286,7 @@ namespace ScriptableObjectGraph.Editor
 
         public void PopulateView()
         {
-            _clear = true;
+            _manual = true;
 
             DeleteElements(graphElements);
             _nodeDictionary.Clear();

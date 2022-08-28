@@ -23,8 +23,8 @@ namespace ScriptableObjectGraph.Editor
 
         public event Action<NodeView> OnNodeDoubleClick;
 
-        public Port[] InputPorts;
-        public Port[] OutputPorts;
+        public List<Port> InputPorts;
+        public List<Port> OutputPorts;
 
         public virtual int InputPortCount => 1;
 
@@ -65,9 +65,11 @@ namespace ScriptableObjectGraph.Editor
         }
 
         #region Ports
-        public virtual Port[] CreateInputPorts()
+        public virtual List<Port> CreateInputPorts()
         {
-            InputPorts = new Port[InputPortCount];
+            inputContainer.Clear();
+
+            InputPorts = new List<Port>(new Port[InputPortCount]);
             for (int i = 0; i < InputPortCount; i++)
             {
                 InputPorts[i] = InstantiatePort(Orientation.Horizontal, Direction.Input, Port.Capacity.Multi, typeof(bool));
@@ -77,9 +79,11 @@ namespace ScriptableObjectGraph.Editor
             return InputPorts;
         }
 
-        public virtual Port[] CreateOutputPorts()
+        public virtual List<Port> CreateOutputPorts()
         {
-            OutputPorts = new Port[Node.Ports.Length];
+            outputContainer.Clear();
+
+            OutputPorts = new List<Port>(new Port[Node.Ports.Length]);
             for (int i = 0; i < Node.Ports.Length; i++)
             {
                 OutputPorts[i] = InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(bool));
@@ -137,7 +141,7 @@ namespace ScriptableObjectGraph.Editor
 
         public virtual int GetInputPortIndex(Port port)
         {
-            for (int i = 0; i < InputPorts.Length; i++)
+            for (int i = 0; i < InputPorts.Count; i++)
             {
                 if (InputPorts[i] == port) return i;
             }
@@ -155,7 +159,7 @@ namespace ScriptableObjectGraph.Editor
                     return;
                 }
 
-                for (int i = 0; i < OutputPorts.Length; i++)
+                for (int i = 0; i < OutputPorts.Count; i++)
                 {
                     if (OutputPorts[i] == edge.output)
                     {
@@ -177,7 +181,7 @@ namespace ScriptableObjectGraph.Editor
             }
             else if(child is ExitNodeView)
             {
-                for (int i = 0; i < OutputPorts.Length; i++)
+                for (int i = 0; i < OutputPorts.Count; i++)
                 {
                     if (OutputPorts[i] == edge.output)
                     {
@@ -209,7 +213,7 @@ namespace ScriptableObjectGraph.Editor
                     return;
                 }
 
-                for (int i = 0; i < OutputPorts.Length; i++)
+                for (int i = 0; i < OutputPorts.Count; i++)
                 {
                     if (OutputPorts[i] == edge.output)
                     {
