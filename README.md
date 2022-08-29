@@ -1,7 +1,9 @@
 # Scriptable Object Graph
-A (soon to be) easily expandable implementation of Unity's experiemental GraphView system, built specifically for Scriptable Objects. 
+An easily expandable implementation of Unity's experiemental GraphView system, built specifically for Scriptable Objects. 
 
 Setting up the GraphView every time seemed like a chore, so I decided to make a package that would enable me to simple inherit from a few classes/interfaces and have a brand new node-based system without having to touch the GraphView code.
+
+![image](https://user-images.githubusercontent.com/10677646/187116635-de6705d9-e27d-457a-9220-66598013beef.png)
 
 ## How-to
 Setting up a new node system is relatively straightforward, no major coding is required!
