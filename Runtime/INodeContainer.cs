@@ -19,6 +19,10 @@ namespace ScriptableObjectGraph
             void DeleteNode(NodeBase node);
             NodeBase GetEntryNode();
             void SetEntryNode(NodeBase node);
+
+            IEnumerable<PlacematData> GetPlacemats();
+            void AddPlacemat(PlacematData placemat);
+            void DeletePlacemat(PlacematData placemat);
         }
     }
 

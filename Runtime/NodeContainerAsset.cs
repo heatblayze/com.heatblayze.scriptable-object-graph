@@ -30,6 +30,25 @@ namespace ScriptableObjectGraph
         [SerializeField, HideInInspector]
         Vector2 _exitNodePosition = new Vector2(1000, 375);
 
+        public List<PlacematData> Placemats => _placemats;
+        [SerializeField, SerializeReference, HideInInspector]
+        List<PlacematData> _placemats = new List<PlacematData>();
+
+        public IEnumerable<PlacematData> GetPlacemats()
+        {
+            return Placemats;
+        }
+
+        public void AddPlacemat(PlacematData placemat)
+        {
+            Placemats.Add(placemat);
+        }
+
+        public void DeletePlacemat(PlacematData placemat)
+        {
+            Placemats.Remove(placemat);
+        }
+
         public NodeBase GetEntryNode()
         {
             return _entryNode;

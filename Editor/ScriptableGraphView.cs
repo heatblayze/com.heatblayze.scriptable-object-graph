@@ -126,7 +126,7 @@ namespace ScriptableObjectGraph.Editor
         {
             foreach (Port port in oldPorts)
             {
-                _portDictionary.Remove(port);                
+                _portDictionary.Remove(port);
 
                 foreach (var connection in port.connections)
                 {
@@ -170,6 +170,7 @@ namespace ScriptableObjectGraph.Editor
 
             if (graphViewChange.elementsToRemove != null)
             {
+                Undo.IncrementCurrentGroup();
                 graphViewChange.elementsToRemove.ForEach(element =>
                 {
                     if (element is Edge edge)
@@ -184,7 +185,14 @@ namespace ScriptableObjectGraph.Editor
                     {
                         DeleteNode(nodeView.Node);
                     }
+                    else if (element is CustomPlacemat placemat)
+                    {
+                        Undo.RecordObject(Asset as UnityEngine.Object, "Delete placemat");
+                        Asset.DeletePlacemat(placemat.PlacematData);
+                    }
                 });
+
+                Undo.SetCurrentGroupName("Delete objects");
             }
 
             if (graphViewChange.movedElements != null)
@@ -205,9 +213,14 @@ namespace ScriptableObjectGraph.Editor
                     {
                         Asset.ExitNodePosition = exitNodeView.GetPosition().position;
                     }
+                    else if(item is CustomPlacemat placemat)
+                    {
+                        Undo.RecordObject(Asset as UnityEngine.Object, "Move placemat");
+                        placemat.PlacematData.Position = placemat.GetPosition();
+                    }
                 }
 
-                Undo.SetCurrentGroupName("Move node(s)");
+                Undo.SetCurrentGroupName("Move objects");
             }
 
             return graphViewChange;
@@ -313,6 +326,11 @@ namespace ScriptableObjectGraph.Editor
                 if (node is NodeView nodeView)
                     nodeView.ConnectOutputs();
             }
+
+            foreach (var placemat in Asset.GetPlacemats())
+            {
+                CreatePlacematView(placemat);
+            }
         }
 
         public NodeView Find(NodeBase item)
@@ -330,7 +348,6 @@ namespace ScriptableObjectGraph.Editor
         #endregion
 
         #region Overrides
-
         public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
         {
             if (Asset == null)
@@ -371,6 +388,13 @@ namespace ScriptableObjectGraph.Editor
             {
                 evt.menu.AppendAction("<empty>", null, DropdownMenuAction.Status.Disabled);
             }
+
+            evt.menu.AppendSeparator();
+
+            evt.menu.AppendAction("Add Placemat", (a) =>
+            {
+                CreateNewPlacemat(viewTransform.matrix.inverse.MultiplyPoint(a.eventInfo.localMousePosition));
+            });
         }
 
         public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
@@ -391,6 +415,55 @@ namespace ScriptableObjectGraph.Editor
             return null;
         }
 
+        #endregion
+
+        #region Placemats
+        void CreatePlacematView(PlacematData placematData)
+        {
+            var placemat = placematContainer.CreatePlacemat<CustomPlacemat>(
+                placematData.Position, placematData.ZOrder, placematData.Title);
+
+            placemat.PlacematData = placematData;
+            placemat.Collapsed = placematData.Collapsed;
+
+            placemat.OnCollapseChange += (CustomPlacemat p) =>
+            {
+                Undo.RecordObject(Asset as UnityEngine.Object, "Collapse placemat");
+                p.PlacematData.Collapsed = p.Collapsed;
+            };
+
+            placemat.OnTitleChange += (CustomPlacemat p) =>
+            {
+                Undo.RecordObject(Asset as UnityEngine.Object, "Rename placemat");
+                p.PlacematData.Title = p.title;
+            };
+
+            placemat.OnPointerUp += (CustomPlacemat p) =>
+            {
+                if (p.GetPosition() != p.PlacematData.Position)
+                {
+                    Undo.RecordObject(Asset as UnityEngine.Object, "Adjust placemat");
+                    p.PlacematData.Position = p.GetPosition();
+                }
+                p.SetPosition(p.GetPosition());
+            };
+        }
+
+        void CreateNewPlacemat(Vector2 position)
+        {
+            var posRect = new Rect(position, new Vector2(202, 102));
+            var placematData = new PlacematData()
+            {
+                Position = posRect,
+                Title = "New Placemat",
+                ZOrder = placematContainer.GetTopZOrder()
+            };
+            CreatePlacematView(placematData);
+
+            Undo.RecordObject(Asset as UnityEngine.Object, "Create placemat");
+
+            Asset.AddPlacemat(placematData);
+        }
         #endregion
 
         #region Node Creation
