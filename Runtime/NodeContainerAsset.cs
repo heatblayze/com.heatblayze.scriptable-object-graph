@@ -24,11 +24,11 @@ namespace ScriptableObjectGraph
 
         public Vector2 EntryNodePosition { get => _entryNodePosition; set => _entryNodePosition = value; }
         [SerializeField, HideInInspector]
-        Vector2 _entryNodePosition = new Vector2(140, 375);
+        Vector2 _entryNodePosition = new Vector2(50, 200);
 
         public Vector2 ExitNodePosition { get => _exitNodePosition; set => _exitNodePosition = value; }
         [SerializeField, HideInInspector]
-        Vector2 _exitNodePosition = new Vector2(1000, 375);
+        Vector2 _exitNodePosition = new Vector2(725, 200);
 
         public List<PlacematData> Placemats => _placemats;
         [SerializeField, SerializeReference, HideInInspector]
