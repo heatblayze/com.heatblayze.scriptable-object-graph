@@ -7,5 +7,6 @@
   "author": {
     "name": "heatblayze",
     "url": "https://github.com/heatblayze"
-  }
+  },
+  "type": "library"
 }
