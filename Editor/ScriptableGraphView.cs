@@ -424,7 +424,7 @@ namespace ScriptableObjectGraph.Editor
                 placematData.Position, placematData.ZOrder, placematData.Title);
 
             placemat.PlacematData = placematData;
-            placemat.Collapsed = placematData.Collapsed;
+            placemat.Init();
 
             placemat.OnCollapseChange += (CustomPlacemat p) =>
             {
@@ -446,6 +446,12 @@ namespace ScriptableObjectGraph.Editor
                     p.PlacematData.Position = p.GetPosition();
                 }
                 p.SetPosition(p.GetPosition());
+            };
+
+            placemat.OnChangeColor += (CustomPlacemat p) =>
+            {
+                Undo.RecordObject(Asset as UnityEngine.Object, "Recolor placemat");
+                p.PlacematData.Color = p.Color;
             };
         }
 

@@ -13,6 +13,7 @@ namespace ScriptableObjectGraph.Editor
         public Action<CustomPlacemat> OnCollapseChange;
         public Action<CustomPlacemat> OnTitleChange;
         public Action<CustomPlacemat> OnPointerUp;
+        public Action<CustomPlacemat> OnChangeColor;
 
         public override bool Collapsed
         {
@@ -34,9 +35,25 @@ namespace ScriptableObjectGraph.Editor
             }
         }
 
+        public override Color Color
+        {
+            get => base.Color;
+            set
+            {
+                base.Color = value;
+                OnChangeColor?.Invoke(this);
+            }
+        }
+
         public CustomPlacemat()
         {
             RegisterCallback<ClickEvent>(PointerUpCallback, TrickleDown.TrickleDown);
+        }
+
+        public void Init()
+        {
+            base.Collapsed = PlacematData.Collapsed;
+            base.Color = PlacematData.Color;
         }
 
         void PointerUpCallback(ClickEvent evt)
