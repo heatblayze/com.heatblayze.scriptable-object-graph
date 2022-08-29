@@ -192,6 +192,12 @@ namespace ScriptableObjectGraph.Editor
                     }
                 });
 
+                if (graphViewChange.elementsToRemove.Contains(EntryNode))
+                    graphViewChange.elementsToRemove.Remove(EntryNode);
+
+                if (graphViewChange.elementsToRemove.Contains(ExitNode))
+                    graphViewChange.elementsToRemove.Remove(ExitNode);
+
                 Undo.SetCurrentGroupName("Delete objects");
             }
 
@@ -222,6 +228,8 @@ namespace ScriptableObjectGraph.Editor
 
                 Undo.SetCurrentGroupName("Move objects");
             }
+
+            ClearSelection();
 
             return graphViewChange;
         }
