@@ -1,6 +1,7 @@
 using ScriptableObjectGraph.Internal;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEngine;
@@ -8,6 +9,19 @@ using UnityEngine.UIElements;
 
 namespace ScriptableObjectGraph.Editor
 {
+    public class AssetModificationsListener : AssetModificationProcessor
+    {
+        static string[] OnWillSaveAssets(string[] paths)
+        {
+            if (EditorWindow.HasOpenInstances<ScriptableGraphWindow>())
+            {
+                EditorWindow.GetWindow<ScriptableGraphWindow>().CheckDirty(paths);
+            }
+
+            return paths;
+        }
+    }
+
     public class ScriptableGraphWindow : EditorWindow
     {
         public const string PackageRoot = "Packages/com.heatblayze.scriptable-object-graph/Editor/";
@@ -27,6 +41,8 @@ namespace ScriptableObjectGraph.Editor
 
         bool _guiCreated;
 
+        string _title;
+
         #region Static
 
         static ScriptableGraphWindow OpenGraphWindow()
@@ -45,9 +61,8 @@ namespace ScriptableObjectGraph.Editor
             {
                 var window = OpenGraphWindow();
                 window._nodeContainer = asset as INodeContainerBase;
+                window.SetTitle($"{((INodeContainerBase)asset).EditorWindowPrefix} Graph");
                 window.SetAsset(window._nodeContainer);
-
-                window.titleContent = new GUIContent($"{((INodeContainerBase)asset).EditorWindowPrefix} Graph");
                 return true;
             }
             return false;
@@ -71,8 +86,8 @@ namespace ScriptableObjectGraph.Editor
 
                         if (guidScriptable.GuidString == assetGuid)
                         {
+                            SetTitle($"{((INodeContainerBase)asset).EditorWindowPrefix} Graph");
                             SetAsset(asset as INodeContainerBase);
-                            titleContent = new GUIContent($"{((INodeContainerBase)asset).EditorWindowPrefix} Graph");
                         }
                     }
                 }
@@ -152,6 +167,7 @@ namespace ScriptableObjectGraph.Editor
             _graphView.OnNodeSelected += NodeSelected;
             _graphView.OnNodeUnselected += NodeUnselected;
             _graphView.OnSelectAsset += GraphAssetSelected;
+            _graphView.OnAssetDirty += AssetDirty;
         }
 
         void SetAsset(INodeContainerBase nodeContainer)
@@ -162,6 +178,24 @@ namespace ScriptableObjectGraph.Editor
 
             if (_breadcrumbContainer != null)
                 SetBreadcrumbs();
+        }
+
+        void SetTitle(string title)
+        {
+            _title = title;
+            titleContent = new GUIContent(title);
+        }
+
+        public void CheckDirty(string[] paths)
+        {
+            if (_nodeContainer != null && _graphView != null)
+            {
+                string assetPath = AssetDatabase.GetAssetPath(_nodeContainer as UnityEngine.Object);
+                if (paths.Any(x => x == assetPath))
+                {
+                    AssetDirty(false);
+                }
+            }
         }
 
         #region Breadcrumbs
@@ -210,6 +244,11 @@ namespace ScriptableObjectGraph.Editor
         void GraphAssetSelected(INodeContainerBase container)
         {
             SetAsset(container);
+        }
+
+        private void AssetDirty(bool dirty)
+        {
+            titleContent = new GUIContent(_title + (dirty ? "*" : ""));
         }
         #endregion
     }

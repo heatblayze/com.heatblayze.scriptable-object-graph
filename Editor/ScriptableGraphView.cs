@@ -19,7 +19,8 @@ namespace ScriptableObjectGraph.Editor
     {
         public new class UxmlFactory : UxmlFactory<ScriptableGraphView, GraphView.UxmlTraits> { }
 
-        public INodeContainerBase Asset { get => _asset; set => _asset = value; }
+        public UnityEngine.Object AssetObject => Asset as UnityEngine.Object;
+        public INodeContainerBase Asset { get => _asset; }
         [SerializeField]
         INodeContainerBase _asset;
 
@@ -28,6 +29,7 @@ namespace ScriptableObjectGraph.Editor
         public event Action<NodeView> OnNodeSelected;
         public event Action<NodeView> OnNodeUnselected;
         public event Action<INodeContainerBase> OnSelectAsset;
+        public event Action<bool> OnAssetDirty;
 
         public EntryNodeView EntryNode { get; private set; }
         public ExitNodeView ExitNode { get; private set; }
@@ -59,14 +61,21 @@ namespace ScriptableObjectGraph.Editor
             Undo.undoRedoPerformed += OnUndo;
         }
 
+        void CheckDirty()
+        {
+            if (AssetObject != null)
+                OnAssetDirty?.Invoke(EditorUtility.IsDirty(AssetObject));
+        }
+
         void OnUndo()
         {
-            AssetDatabase.SaveAssets();
-
             NodeBase selectedNode = _selectedNode?.Node;
 
             if (Asset != null)
+            {
+                AssetDatabase.SaveAssetIfDirty(AssetObject);
                 PopulateView();
+            }
 
             if (selectedNode != null)
             {
@@ -83,11 +92,22 @@ namespace ScriptableObjectGraph.Editor
 
             Asset.DeleteNode(node);
 
+            List<UnityEngine.Object> toDelete = new List<UnityEngine.Object>();
+            DeleteRecursive(node, ref toDelete);
+            
+            Undo.CollapseUndoOperations(Undo.GetCurrentGroup());            
+        }
+
+        void DeleteRecursive(NodeBase node, ref List<UnityEngine.Object> delete)
+        {
             Undo.DestroyObjectImmediate(node);
-
-            Undo.CollapseUndoOperations(Undo.GetCurrentGroup());
-
-            AssetDatabase.SaveAssets();
+            if (node is INodeContainerBase container)
+            {
+                foreach(var child in container.GetNodesInternal())
+                {
+                    DeleteRecursive(child, ref delete);
+                }
+            }
         }
         #endregion
 
@@ -166,6 +186,8 @@ namespace ScriptableObjectGraph.Editor
                     else if (parentNode is EntryNodeView entryNode)
                         entryNode.SetEntryNode(childNode);
                 });
+
+                EditorUtility.SetDirty(AssetObject);
             }
 
             if (graphViewChange.elementsToRemove != null)
@@ -187,7 +209,7 @@ namespace ScriptableObjectGraph.Editor
                     }
                     else if (element is CustomPlacemat placemat)
                     {
-                        Undo.RecordObject(Asset as UnityEngine.Object, "Delete placemat");
+                        Undo.RecordObject(AssetObject, "Delete placemat");
                         Asset.DeletePlacemat(placemat.PlacematData);
                     }
                 });
@@ -197,6 +219,12 @@ namespace ScriptableObjectGraph.Editor
 
                 if (graphViewChange.elementsToRemove.Contains(ExitNode))
                     graphViewChange.elementsToRemove.Remove(ExitNode);
+
+                if(graphViewChange.elementsToRemove.Count > 0)
+                {
+                    EditorUtility.SetDirty(AssetObject);
+                    AssetDatabase.SaveAssetIfDirty(AssetObject);
+                }
 
                 Undo.SetCurrentGroupName("Delete objects");
             }
@@ -221,14 +249,16 @@ namespace ScriptableObjectGraph.Editor
                     }
                     else if(item is CustomPlacemat placemat)
                     {
-                        Undo.RecordObject(Asset as UnityEngine.Object, "Move placemat");
+                        Undo.RecordObject(AssetObject, "Move placemat");
                         placemat.PlacematData.Position = placemat.GetPosition();
                     }
                 }
+                EditorUtility.SetDirty(AssetObject);
 
                 Undo.SetCurrentGroupName("Move objects");
             }
 
+            CheckDirty();
             ClearSelection();
 
             return graphViewChange;
@@ -287,6 +317,8 @@ namespace ScriptableObjectGraph.Editor
 
                 Undo.SetCurrentGroupName("Paste nodes");
 
+                EditorUtility.SetDirty(AssetObject);
+
                 ClearSelection();
 
                 foreach (var node in createdNodeViews)
@@ -295,13 +327,15 @@ namespace ScriptableObjectGraph.Editor
                     AddToSelection(node);
                 }
             }
+
+            CheckDirty();
         }
         #endregion
 
         #region Public Methods
         public void SetAsset(INodeContainerBase asset)
         {
-            Asset = asset;
+            _asset = asset;
             PopulateView();
         }
 
@@ -339,6 +373,8 @@ namespace ScriptableObjectGraph.Editor
             {
                 CreatePlacematView(placemat);
             }
+
+            CheckDirty();
         }
 
         public NodeView Find(NodeBase item)
@@ -436,13 +472,13 @@ namespace ScriptableObjectGraph.Editor
 
             placemat.OnCollapseChange += (CustomPlacemat p) =>
             {
-                Undo.RecordObject(Asset as UnityEngine.Object, "Collapse placemat");
+                Undo.RecordObject(AssetObject, "Collapse placemat");
                 p.PlacematData.Collapsed = p.Collapsed;
             };
 
             placemat.OnTitleChange += (CustomPlacemat p) =>
             {
-                Undo.RecordObject(Asset as UnityEngine.Object, "Rename placemat");
+                Undo.RecordObject(AssetObject, "Rename placemat");
                 p.PlacematData.Title = p.title;
             };
 
@@ -450,7 +486,7 @@ namespace ScriptableObjectGraph.Editor
             {
                 if (p.GetPosition() != p.PlacematData.Position)
                 {
-                    Undo.RecordObject(Asset as UnityEngine.Object, "Adjust placemat");
+                    Undo.RecordObject(AssetObject, "Adjust placemat");
                     p.PlacematData.Position = p.GetPosition();
                 }
                 p.SetPosition(p.GetPosition());
@@ -458,7 +494,7 @@ namespace ScriptableObjectGraph.Editor
 
             placemat.OnChangeColor += (CustomPlacemat p) =>
             {
-                Undo.RecordObject(Asset as UnityEngine.Object, "Recolor placemat");
+                Undo.RecordObject(AssetObject, "Recolor placemat");
                 p.PlacematData.Color = p.Color;
             };
         }
@@ -474,9 +510,10 @@ namespace ScriptableObjectGraph.Editor
             };
             CreatePlacematView(placematData);
 
-            Undo.RecordObject(Asset as UnityEngine.Object, "Create placemat");
+            Undo.RecordObject(AssetObject, "Create placemat");
 
             Asset.AddPlacemat(placematData);
+            CheckDirty();
         }
         #endregion
 
@@ -526,7 +563,8 @@ namespace ScriptableObjectGraph.Editor
             Asset.AddNode(node);
 
             AssetDatabase.AddObjectToAsset(node, (ScriptableObject)Asset);
-            AssetDatabase.SaveAssets();
+
+            AssetDatabase.SaveAssetIfDirty(AssetObject);
 
             Undo.RegisterCreatedObjectUndo(node, "Create node");
 
@@ -540,6 +578,8 @@ namespace ScriptableObjectGraph.Editor
             node.Initialize(Asset);
             var nodeView = InsertNode(factory, node, position);
 
+            EditorUtility.SetDirty(AssetObject);
+            CheckDirty();
             Undo.SetCurrentGroupName("Create Node");
             return nodeView;
         }
