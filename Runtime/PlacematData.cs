@@ -11,6 +11,6 @@ namespace ScriptableObjectGraph
         public Rect Position;
         public string Title;
         public bool Collapsed;
-        public Color Color = new Color(38, 48, 48);
+        public Color Color = new Color(0.15f, 0.19f, 0.19f);
     }
 }
