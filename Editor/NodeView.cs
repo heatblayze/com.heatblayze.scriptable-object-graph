@@ -28,6 +28,8 @@ namespace ScriptableObjectGraph.Editor
 
         public virtual int InputPortCount => 1;
 
+        int _outputPortHash;
+
         public NodeView()
         {
             this.RegisterCallback<PointerDownEvent>(MouseDown, TrickleDown.TrickleDown);
@@ -42,6 +44,9 @@ namespace ScriptableObjectGraph.Editor
         public virtual void UpdateContents()
         {
             title = Node.name;
+
+            if (_outputPortHash != Node.Ports.GetHashCode())
+                UpdateOutputs();
         }
 
         public override void OnSelected()
@@ -65,6 +70,15 @@ namespace ScriptableObjectGraph.Editor
         }
 
         #region Ports
+        public virtual void UpdateOutputs()
+        {
+            var oldOutputs = OutputPorts;
+            CreateOutputPorts();
+            ConnectOutputs();
+
+            Parent.UpdatePorts(this, oldOutputs, OutputPorts);
+        }
+
         public virtual List<Port> CreateInputPorts()
         {
             inputContainer.Clear();
@@ -82,6 +96,8 @@ namespace ScriptableObjectGraph.Editor
         public virtual List<Port> CreateOutputPorts()
         {
             outputContainer.Clear();
+
+            _outputPortHash = Node.Ports.GetHashCode();
 
             OutputPorts = new List<Port>(new Port[Node.Ports.Length]);
             for (int i = 0; i < Node.Ports.Length; i++)

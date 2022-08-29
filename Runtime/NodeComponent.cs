@@ -8,6 +8,9 @@ namespace ScriptableObjectGraph
     [Serializable]
     public abstract class NodeComponent : ICloneable
     {
+        [SerializeField, HideInInspector]
+        string m_Name;
+
         public NodeBase ParentNode { get => _parentNode; set => _parentNode = value; }
         [SerializeField, HideInInspector]
         NodeBase _parentNode;

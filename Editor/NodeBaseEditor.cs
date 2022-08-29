@@ -46,7 +46,7 @@ namespace ScriptableObjectGraph.Editor
 
             EditorGUILayout.Space();
 
-            EditorGUILayout.LabelField(new GUIContent("Components"), _headerStyle);
+            //EditorGUILayout.LabelField(new GUIContent("Components"), _headerStyle);
             EditorGUILayout.PropertyField(_components);
 
             serializedObject.ApplyModifiedProperties();

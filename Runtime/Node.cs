@@ -15,7 +15,9 @@ namespace ScriptableObjectGraph
     [System.Serializable]
     public class NodePort
     {
+        [HideInInspector]
         public List<NodeConnection> Connections = new List<NodeConnection>();
+        public NodeComponentList Components = new NodeComponentList();
     }
 
     public abstract class NodeBase : GuidScriptable
@@ -33,7 +35,7 @@ namespace ScriptableObjectGraph
         NodeComponentList _components;
 
         public NodePort[] Ports { get => _ports; set => _ports = value; }
-        [SerializeField, HideInInspector]
+        [SerializeField]
         protected NodePort[] _ports;
 
         public void Initialize(INodeContainerBase parent)

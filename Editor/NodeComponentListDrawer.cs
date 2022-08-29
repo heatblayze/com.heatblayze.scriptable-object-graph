@@ -11,10 +11,6 @@ namespace ScriptableObjectGraph.Editor
     public class NodeComponentListDrawer : PropertyDrawer
     {
         const int AddComponentButtonHeight = 20;
-        const int ArraySpacing = 10;
-        const int SeparatorSpacing = 4;
-        const int SeparatorSize = 1;
-
         SerializedProperty _components;
 
         void Init(SerializedProperty property)
@@ -26,16 +22,7 @@ namespace ScriptableObjectGraph.Editor
         {
             Init(property);
 
-            float h = 0;
-            for (int i = 0; i < _components.arraySize; i++)
-            {
-                var component = _components.GetArrayElementAtIndex(i);
-                h += EditorGUI.GetPropertyHeight(component, true);
-                h += ArraySpacing;
-                h += SeparatorSpacing;
-                h += SeparatorSize;
-            }
-
+            float h = EditorGUI.GetPropertyHeight(_components, true);
             h += AddComponentButtonHeight;
             return h;
         }
@@ -44,32 +31,11 @@ namespace ScriptableObjectGraph.Editor
         {
             Init(property);
 
-            float y = position.y;
-            for (int i = 0; i < _components.arraySize; i++)
-            {
-                string labelName = null;
-                var component = _components.GetArrayElementAtIndex(i);
-                if (component.managedReferenceValue != null)
-                {
-                    var type = component.managedReferenceValue.GetType();
-                    labelName = ObjectNames.NicifyVariableName(type.Name);
-                }
-                else
-                {
-                    labelName = "Nullreference";
-                }
+            var height = EditorGUI.GetPropertyHeight(_components, true);
+            position.height = height;
+            EditorGUI.PropertyField(position, _components, label);
 
-                position.height = EditorGUI.GetPropertyHeight(component, true);
-                EditorGUI.PropertyField(position, component, new GUIContent(labelName), true);
-
-                position.y += position.height;
-
-                position.y += SeparatorSpacing;
-                position.height = SeparatorSize;
-                EditorGUI.DrawRect(position, Color.black);
-
-                position.y += ArraySpacing;
-            }
+            position.y += height;
 
             position.height = AddComponentButtonHeight;
             if (EditorGUI.DropdownButton(position, new GUIContent("Add Component"), FocusType.Passive))
@@ -104,6 +70,7 @@ namespace ScriptableObjectGraph.Editor
             var obj = (NodeComponent)Activator.CreateInstance(data.Item1);
             obj.ParentNode = data.Item2.serializedObject.targetObject as NodeBase;
             elem.managedReferenceValue = obj;
+            elem.FindPropertyRelative("m_Name").stringValue = data.Item1.Name;
 
             _components.serializedObject.ApplyModifiedProperties();
         }
