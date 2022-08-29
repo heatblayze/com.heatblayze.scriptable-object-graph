@@ -40,11 +40,14 @@ namespace ScriptableObjectGraph
 
         public void Initialize(INodeContainerBase parent)
         {
-            _parent = (GuidScriptable)parent;
+            _parent = (GuidScriptable)parent;            
             OnCreated();
         }
 
-        protected abstract void OnCreated();
+        protected virtual void OnCreated()
+        {
+            _ports = new NodePort[] { new NodePort() };
+        }
 
         public virtual NodeBase Clone()
         {
