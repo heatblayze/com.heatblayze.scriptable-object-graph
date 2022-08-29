@@ -62,13 +62,18 @@ namespace ScriptableObjectGraph.Editor
                 var path = EditorPrefs.GetString("scriptable_window_container_path");
                 if (!string.IsNullOrEmpty(path))
                 {
+                    var assetGuid = EditorPrefs.GetString("scriptable_window_container_guid");
                     var typeString = EditorPrefs.GetString("scriptable_window_container_type");
-                    var asset = AssetDatabase.LoadAssetAtPath(path, typeof(INodeContainerBase));
-                    if(asset != null && typeof(INodeContainerBase).IsAssignableFrom(asset.GetType()))
+                    var assets = AssetDatabase.LoadAllAssetsAtPath(path);
+                    foreach (var asset in assets)
                     {
-                        SetAsset(asset as INodeContainerBase);
+                        if (assets == null || asset is not GuidScriptable guidScriptable) continue;
 
-                        titleContent = new GUIContent($"{((INodeContainerBase)asset).EditorWindowPrefix} Graph");
+                        if (guidScriptable.GuidString == assetGuid)
+                        {
+                            SetAsset(asset as INodeContainerBase);
+                            titleContent = new GUIContent($"{((INodeContainerBase)asset).EditorWindowPrefix} Graph");
+                        }
                     }
                 }
             }
@@ -82,10 +87,9 @@ namespace ScriptableObjectGraph.Editor
                 {
                     _graphView.OnNodeSelected += _inspector.NodeSelected;
                     _graphView.OnNodeUnselected += _inspector.NodeUnselected;
-
                 }
 
-                if(_breadcrumbContainer != null)
+                if (_breadcrumbContainer != null)
                 {
                     SetBreadcrumbs();
                 }
@@ -94,10 +98,18 @@ namespace ScriptableObjectGraph.Editor
 
         private void OnDisable()
         {
-            if(_nodeContainer != null)
+            if (_nodeContainer != null)
             {
-                EditorPrefs.SetString("scriptable_window_container_path", AssetDatabase.GetAssetPath(_nodeContainer as UnityEngine.Object));
+                var guidScriptable = (_nodeContainer as GuidScriptable);
+                EditorPrefs.SetString("scriptable_window_container_path", AssetDatabase.GetAssetPath(guidScriptable));
+                EditorPrefs.SetString("scriptable_window_container_guid", guidScriptable.GuidString);
                 EditorPrefs.SetString("scriptable_window_container_type", _nodeContainer.GetType().FullName);
+            }
+            else
+            {
+                EditorPrefs.SetString("scriptable_window_container_guid", string.Empty);
+                EditorPrefs.SetString("scriptable_window_container_path", string.Empty);
+                EditorPrefs.SetString("scriptable_window_container_type", string.Empty);
             }
         }
 
@@ -124,7 +136,7 @@ namespace ScriptableObjectGraph.Editor
             _inspectorPanel = _splitView.Q("right-panel");
 
             var size = EditorPrefs.GetFloat("scriptable_graph_panel_size", -1);
-            if(size > -1)
+            if (size > -1)
             {
                 _splitView.fixedPaneInitialDimension = size;
             }
