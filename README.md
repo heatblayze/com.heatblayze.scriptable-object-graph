@@ -1,3 +1,5 @@
+This project has been archived as I am no longer using Unity.
+
 # Scriptable Object Graph
 An easily expandable implementation of Unity's experiemental GraphView system, built specifically for Scriptable Objects. 
 
